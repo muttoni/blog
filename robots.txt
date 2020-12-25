@@ -1,1 +1,1 @@
-Sitemap: /blog/sitemap.xml
+Sitemap: https://muttoni.github.io/blog/sitemap.xml
