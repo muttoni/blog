@@ -7,6 +7,7 @@
 # https://learnxinyminutes.com/docs/yaml/
 
 title: Andrea Muttoni
+author: Andrea Muttoni
 description: A personal blog focused on machine learning, music and everything inbetween.
 github_username: muttoni
 # you can comment the below line out if your repo name is not different than your baseurl
@@ -41,6 +42,7 @@ minima:
   social_links:
     twitter: muttonia
     github: muttoni
+    linkedin: muttoni
 
 # Set this to true to get LaTeX math equation support
 use_math: true
