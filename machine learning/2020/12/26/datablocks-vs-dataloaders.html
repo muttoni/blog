@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Understanding DataBlocks and DataLoaders in fast.ai | Andrea Muttoni</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Understanding DataBlocks and DataLoaders in fast.ai" />
+<meta name="author" content="Andrea Muttoni" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="What are they and how do they work together? In this post we will go over what DataBlocks and DataLoader(s) are at a high level, and explain how they work together in the context of building a Machine Learning model." />
+<meta property="og:description" content="What are they and how do they work together? In this post we will go over what DataBlocks and DataLoader(s) are at a high level, and explain how they work together in the context of building a Machine Learning model." />
+<link rel="canonical" href="https://muttoni.github.io/blog/machine%20learning/2020/12/26/datablocks-vs-dataloaders.html" />
+<meta property="og:url" content="https://muttoni.github.io/blog/machine%20learning/2020/12/26/datablocks-vs-dataloaders.html" />
+<meta property="og:site_name" content="Andrea Muttoni" />
+<meta property="og:image" content="https://muttoni.github.io/blog/images/fastai-logo.jpeg" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-12-26T00:00:00-06:00" />
+<script type="application/ld+json">
+{"url":"https://muttoni.github.io/blog/machine%20learning/2020/12/26/datablocks-vs-dataloaders.html","@type":"BlogPosting","headline":"Understanding DataBlocks and DataLoaders in fast.ai","dateModified":"2020-12-26T00:00:00-06:00","datePublished":"2020-12-26T00:00:00-06:00","image":"https://muttoni.github.io/blog/images/fastai-logo.jpeg","mainEntityOfPage":{"@type":"WebPage","@id":"https://muttoni.github.io/blog/machine%20learning/2020/12/26/datablocks-vs-dataloaders.html"},"author":{"@type":"Person","name":"Andrea Muttoni"},"description":"What are they and how do they work together? In this post we will go over what DataBlocks and DataLoader(s) are at a high level, and explain how they work together in the context of building a Machine Learning model.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://muttoni.github.io/blog/feed.xml" title="Andrea Muttoni" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','//www.google-analytics.com/analytics.js','ga');ga('create','G-BLM1GZKCEL','auto');ga('require','displayfeatures');ga('send','pageview');</script>
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">Andrea Muttoni</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Understanding DataBlocks and DataLoaders in fast.ai</h1><p class="page-description">What are they and how do they work together? In this post we will go over what DataBlocks and DataLoader(s) are at a high level, and explain how they work together in the context of building a Machine Learning model.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2020-12-26T00:00:00-06:00" itemprop="datePublished">
+        Dec 26, 2020
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      5 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#machine learning">machine learning</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h2 id="introduction">Introduction</h2>
+
+<p>Coming from SciKit and TensorFlow, when I first started working with PyTorch and fast.ai I quickly realized they have a very opinionated (but convenient!) way to deal with data, through the <code class="language-plaintext highlighter-rouge">DataBlock</code>s and <code class="language-plaintext highlighter-rouge">DataLoaders</code> APIs. In this post we will quickly go over what they are (you can check the <a href="https://docs.fast.ai/data.load.html">official documentation</a> if you want to dive a little deeper), and understand how they work together. If you are not 100% clear about the difference between a Datablock and a DataLoader, this blog post hopefully will shed some light.</p>
+
+<h2 id="datablock">DataBlock</h2>
+
+<p><img src="/blog/images/datablock-structure.png" alt="" title="DataBlock overview" />
+A Data block is nothing more than a pipeline for data assembly. When you initially create a <code class="language-plaintext highlighter-rouge">DataBlock</code>, you won’t need to specify any data. What you will need to specify, however, is a set of rules for <strong>how</strong> to treat your data when it does flow in. It doesn’t care about what you’ll do with it, it just cares about how you want it gathered, classified and split.</p>
+
+<p>In order to create a Data block you need to specify</p>
+<ol>
+  <li>what types of data to expect for your input (aka features) and target variables (aka labels)</li>
+  <li>how to get the data</li>
+  <li>how to differentiate features from the target variables,</li>
+  <li>how to split the data for training (train &amp; validation set)</li>
+</ol>
+
+<p>Let’s see how to do that. Below is an example DataBlock that we would create if we were looking to create a Convolutional Neural Network (CNN) to recognize different species of cats (i.e. a classification model).</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cats</span> <span class="o">=</span> <span class="n">DataBlock</span><span class="p">(</span>
+    <span class="n">blocks</span><span class="o">=</span><span class="p">(</span><span class="n">ImageBlock</span><span class="p">,</span> <span class="n">CategoryBlock</span><span class="p">),</span> 
+    <span class="n">get_items</span><span class="o">=</span><span class="n">get_image_files</span><span class="p">,</span> 
+    <span class="n">splitter</span><span class="o">=</span><span class="n">RandomSplitter</span><span class="p">(</span><span class="n">valid_pct</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span>
+    <span class="n">get_y</span><span class="o">=</span><span class="n">parent_label</span><span class="p">,</span>
+    <span class="n">item_tfms</span><span class="o">=</span><span class="n">Resize</span><span class="p">(</span><span class="mi">128</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>The four main steps mentioned above are exactly the first four (required) arguments of a DataBlock:</p>
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">blocks</code>: is where you define the types of data your model will work with. Usually you will specify at least two blocks: one that represents your independent (input) variable, and one that represents your dependent (target) variable. You can also specify multiple input/output variables.</li>
+  <li><code class="language-plaintext highlighter-rouge">get_items</code>: a function that will actually go and pick up the data when necessary (more on this later)</li>
+  <li><code class="language-plaintext highlighter-rouge">splitter</code>: how to split up the data in a training and validation set. The seed is optional and only added for replicability</li>
+  <li><code class="language-plaintext highlighter-rouge">get_y</code>: how to extract the target (dependent) variable from the data. In the case of our cat classifier, this will be by looking at the parent folder, and fast.ai provides a built in function called <code class="language-plaintext highlighter-rouge">parent_label.</code>.</li>
+  <li><code class="language-plaintext highlighter-rouge">item_tfms</code> is an optional argument that we can include to specify any additional processing that needs to be carried out when we flow our data through. In this case, we will resize all images to 128x128. We can specify other transforms, such as <code class="language-plaintext highlighter-rouge">item_tfms=Resize(128, ResizeMethod.Squish))</code> which will resize and squish our images to fit, or <code class="language-plaintext highlighter-rouge">item_tfms=Resize(128, ResizeMethod.Pad, pad_mode='zeros')</code> to resize and pad any leftover space with black. This method is incredibly powerful as it also supports data augmentation. This is beyond the scope of this blog post, but just know that <code class="language-plaintext highlighter-rouge">item_tfms</code> allows you to pre-process your data before it hits your model.</li>
+</ol>
+
+<p>In that snippet of code, what we’ve done is specify a template through which to create <code class="language-plaintext highlighter-rouge">DataLoaders</code>. What are they you might ask? Well, read on!</p>
+
+<blockquote>
+  <p>Tip: For more information on DataBlocks, I highly recommend Aman’s blog post covering the <a href="https://medium.com/@amaarora/fastai-v2-datablocks-api-code-overview-a-gentle-introduction-60338a6c9aa">DataBlocks API</a>. This is also where I got the image for the DataBlocks overview.</p>
+</blockquote>
+
+<h2 id="dataloader-and-dataloaders">DataLoader and DataLoaders</h2>
+
+<p>Now that we’ve defined a <code class="language-plaintext highlighter-rouge">DataBlock</code>, and we’ve specified exactly how our data needs to be structured, categorized and processed, we can start actually feeding in the data for our model to train on. We <em>load</em> this data in with…you guessed it… a Data loader. This is where <code class="language-plaintext highlighter-rouge">DataLoaders</code> come in. A <code class="language-plaintext highlighter-rouge">DataLoaders</code> is a class that our DataBlock will call to load data according to the rules that we’ve specified.</p>
+
+<p>A <code class="language-plaintext highlighter-rouge">DataLoader</code> in fast.ai is a superset of the PyTorch DataLoader, with more helpful callbacks and flexibility. Whereas the Data block knows how to structure the data, the Loader knows how to work with it in the context of training a machine learning model: how much to feed to the model at once (batch size), how many processes to spawn to load the data, how much memory to allocate and many more.</p>
+
+<p>A <code class="language-plaintext highlighter-rouge">DataLoaders</code> (note the plural), is a thin class that automatically generates multiple <code class="language-plaintext highlighter-rouge">DataLoader</code> (singular) objects based on the rules specified in our <code class="language-plaintext highlighter-rouge">DataBlock</code>.</p>
+
+<h2 id="conclusion-and-tldr">Conclusion and TLDR</h2>
+
+<p>We’ve seen what they are, now let’s re-iterate how they work together and what their differences are:</p>
+<ul>
+  <li>A <code class="language-plaintext highlighter-rouge">DataBlock</code> is the data pipeline. A template that we create that has NO data, but has all the context on how to work with it. For example, how to split up the data, the data types of our features and targets/labels, how to extract the labels from the underlying data (e.g. folder name).</li>
+  <li>A <code class="language-plaintext highlighter-rouge">DataLoader</code> doesn’t care about preparing data, it expects the data ready to go and only cares about how to load the data (e.g. whether in parallel or in a single process) as well as feeding the data to the model in batches (i.e. <code class="language-plaintext highlighter-rouge">bs</code>, batch size)</li>
+  <li>A <code class="language-plaintext highlighter-rouge">DataLoaders</code> is a thin wrapper for more than one <code class="language-plaintext highlighter-rouge">DataLoader</code>.</li>
+</ul>
+
+<p>In the context of training a model, you will first create a <code class="language-plaintext highlighter-rouge">DataBlock</code>, specify all data processing pipelines, and then load your data through your <code class="language-plaintext highlighter-rouge">DataBlock</code> via the <code class="language-plaintext highlighter-rouge">.dataloaders</code> property, like so:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s">'cats'</span><span class="p">)</span> <span class="c1">#e.g. a dir structure such as 'cats/sphynx/001.jpg'
+</span><span class="n">dls</span> <span class="o">=</span> <span class="n">cats</span><span class="p">.</span><span class="n">dataloaders</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> 
+
+<span class="c1"># our data is ready to be fed into a model
+</span><span class="n">learn</span> <span class="o">=</span> <span class="n">cnn_leaner</span><span class="p">(</span><span class="n">dls</span><span class="p">,</span> <span class="n">resent18</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">error_rate</span><span class="p">)</span>
+<span class="n">learn</span><span class="p">.</span><span class="n">fine_tune</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Hope this post helps clarify what they are and how these two structures work together. As my knowledge of fast.ai grows, I’ll be sure to update this post</p>
+
+  </div><a class="u-url" href="/blog/machine%20learning/2020/12/26/datablocks-vs-dataloaders.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A personal blog focused on machine learning, music and everything inbetween.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/muttoni" title="muttoni"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://www.linkedin.com/in/muttoni" title="muttoni"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#linkedin"></use></svg></a></li><li><a rel="me" href="https://twitter.com/muttonia" title="muttonia"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
