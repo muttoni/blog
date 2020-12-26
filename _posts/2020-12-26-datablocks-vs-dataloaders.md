@@ -2,7 +2,7 @@
 toc: false
 layout: post
 description: What are they and how do they work together? In this post we will go over what DataBlocks and DataLoader(s) are at a high level, and explain how they work together in the context of building a Machine Learning model. 
-categories: [machine learning]
+categories: [machine-learning, fastai]
 keywords: machine learning, ml, fast.ai, fastai, dataloaders, datablocks, pytorch, data block, data loader
 title: Understanding DataBlocks and DataLoaders in fast.ai
 image: images/fastai-logo.jpeg
@@ -56,9 +56,9 @@ A `DataLoaders` (note the plural), is a thin class that automatically generates 
 ## Conclusion and TLDR
 
 We've seen what they are, now let's re-iterate how they work together and what their differences are:
-- A `DataBlock` is the data pipeline. A template that we create that has NO data, but has all the context on how to work with it. For example, how to split up the data, the data types of our features and targets/labels, how to extract the labels from the underlying data (e.g. folder name).
-- A `DataLoader` doesn't care about preparing data, it expects the data ready to go and only cares about how to load the data (e.g. whether in parallel or in a single process) as well as feeding the data to the model in batches (i.e. `bs`, batch size)
-- A `DataLoaders` is a thin wrapper for more than one `DataLoader`.
+- A **DataBlock** is the data pipeline. A template that we create that has NO data, but has all the context on how to work with it. For example, how to split up the data, the data types of our features and targets/labels, how to extract the labels from the underlying data (e.g. folder name).
+- A **DataLoader** doesn't care about preparing data, it expects the data ready to go and only cares about how to load the data (e.g. whether in parallel or in a single process) as well as feeding the data to the model in batches (i.e. batch size)
+- A **DataLoaders** is a thin wrapper for more than one `DataLoader`.
 
 In the context of training a model, you will first create a `DataBlock`, specify all data processing pipelines, and then load your data through your `DataBlock` via the `.dataloaders` property, like so:
 
