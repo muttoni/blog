@@ -47,9 +47,9 @@ In that snippet of code, what we've done is specify a template through which to 
 
 ## DataLoader and DataLoaders
 
-Now that we've defined a `DataBlock`, and we've specified exactly how our data needs to be structured, categorized and processed, we can start actually feeding in the data for our model to train on. We _load_ this data in with...you guessed it... a Data loader. This is where `DataLoaders` come in. A `DataLoaders` is a class that our DataBlock will call to load data according to the rules that we've specified. 
+Now that we've defined a `DataBlock`, and we've specified exactly how our data needs to be structured, categorized and processed, we can start actually feeding in the data for our model to train on. We _load_ this data in with...you guessed it... a Data loader. This is where `DataLoaders` come in. A `DataLoaders` is an iterator class that our DataBlock will call to load data according to the rules that we've specified in specific chunks (called batch size).
 
-A `DataLoader` in fast.ai is a superset of the PyTorch DataLoader, with more helpful callbacks and flexibility. Whereas the Data block knows how to structure the data, the Loader knows how to work with it in the context of training a machine learning model: how much to feed to the model at once (batch size), how many processes to spawn to load the data, how much memory to allocate and many more.
+A `DataLoader` in fast.ai is a superset of the PyTorch DataLoader, with more helpful callbacks and flexibility. Whereas the Data block knows how to structure the data, the Loader knows how to work with it in the context of training a machine learning model -- i.e. how much to feed to the model at once (batch size), how many processes to spawn to load the data, how much memory to allocate and many more.
 
 A `DataLoaders` (note the plural), is a thin class that automatically generates multiple `DataLoader` (singular) objects based on the rules specified in our `DataBlock`.
 
