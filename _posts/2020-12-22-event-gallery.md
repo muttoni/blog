@@ -2,6 +2,7 @@
 keywords: developer events, evangelism, andrea muttoni, technical evangelist
 description: A gallery of photos from events I've spoken at
 title: Event Gallery
+hide: true
 toc: false 
 badges: false
 comments: false
