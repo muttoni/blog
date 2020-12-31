@@ -478,4 +478,8 @@ pre code { font-size: 15px !important; }
 
 p code { font-size: 19px; }
 
+pre, code { background-color: transparent; }
+
+tt, code { font-size: 18px !important; }
+
 /*# sourceMappingURL=style.css.map */
