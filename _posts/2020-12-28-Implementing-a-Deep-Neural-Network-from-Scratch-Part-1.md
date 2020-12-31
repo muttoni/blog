@@ -294,7 +294,7 @@ layout: notebook
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Without being Neo from the matrix, you can make out the zero drawn as if in ascii text. This is because each value of the array represents a pixel value, in the case of grey scale, from 0 to 255 (from pure black to pure white).</p>
+<p>You don't have to be Neo (from The Matrix) to make out the zero above made up of numbers. This is because each value of the array represents a pixel value, in the case of grey scale, from 0 to 255 (from pure black to pure white).</p>
 <p>Given that this is a 2D matrix, we can access specific parts of the tensor using notation such as <code>zero[5:10,5:10]</code> which will output the rows from index 5 (included) to 10 (excluded) and the same for the columns.</p>
 
 </div>
@@ -1079,8 +1079,8 @@ Digit 9 : 77.6%
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># with the corresponding index flagged as &#39;1&#39;.</span>
-
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Every digit&#39;s tensor stack will have a label</span>
+<span class="c1"># with the corresponding index flagged as &#39;1&#39;.</span>
 <span class="p">[[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">i</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="mi">9</span><span class="o">-</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>
 </pre></div>
 
