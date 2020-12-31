@@ -1644,7 +1644,6 @@ Digit 9 : 77.6%
   <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_tensor</span><span class="p">):</span>
     <span class="n">probabilities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_linear_eq</span><span class="p">(</span><span class="n">image_tensor</span><span class="p">))</span>
     <span class="n">_</span><span class="p">,</span> <span class="n">prediction</span> <span class="o">=</span> <span class="n">probabilities</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-    <span class="c1">#self._print(&quot;Predicted digit: {} (with {:.2%} confidence)&quot;.format(1,0.9))</span>
     <span class="c1"># Return digit and vector of probabilities</span>
     <span class="k">return</span> <span class="n">prediction</span><span class="p">,</span> <span class="n">probabilities</span>
 
@@ -1654,7 +1653,7 @@ Digit 9 : 77.6%
     <span class="n">loss</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
 
   <span class="k">def</span> <span class="nf">_batch_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span><span class="p">):</span>
-    <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">xb</span><span class="p">)</span> <span class="c1"># calculate the softmax across the 2nd dimension</span>
+    <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">xb</span><span class="p">)</span> 
     <span class="n">_</span><span class="p">,</span> <span class="n">max_indices</span> <span class="o">=</span> <span class="n">xb</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># get the index of max value along 2nd dimension</span>
     <span class="n">_</span><span class="p">,</span> <span class="n">tag_indices</span> <span class="o">=</span> <span class="n">yb</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># get index of flag in our label tensors</span>
     <span class="n">corrects</span> <span class="o">=</span> <span class="n">max_indices</span> <span class="o">==</span> <span class="n">tag_indices</span> <span class="c1"># check whether they match</span>
@@ -1670,7 +1669,7 @@ Digit 9 : 77.6%
     <span class="k">return</span> <span class="n">x</span><span class="nd">@self</span><span class="o">.</span><span class="n">weights</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span>
 
   <span class="k">def</span> <span class="nf">_loss_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
-    <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span> <span class="c1"># calculate the softmax across the 2nd dimension</span>
+    <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">targets</span><span class="o">==</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">predictions</span><span class="p">,</span> <span class="n">predictions</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
   <span class="k">def</span> <span class="nf">_print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
