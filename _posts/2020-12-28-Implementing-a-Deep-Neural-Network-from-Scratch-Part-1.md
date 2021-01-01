@@ -435,7 +435,7 @@ layout: notebook
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>We now have a list of stacked tensors (i.e. a list of stacked tensors of each digit). Each stacked tensor has $n$ tensors for each PNG image (rows), and each row contains a 28x28 tensor representing that PNG's pixel values normalized from 0 to 1.</p>
 <p>We can check this by inspecting the first item in our list of <code>training_tensors</code>: the stacked tensor of "zero" PNGs has <em>shape</em> <code>torch.Size([5923, 28, 28])</code>: because it has 5923 rows (equal to the number of training images), each containing a 28x28 tensor (equal to the pixels in each image). If you're having trouble picturing a 3D tensor in your head, think of it like an array of array of arrays (or a list of list of lists in Python).</p>
-<h2 id="Calculating-Average-Pixel-values">Calculating Average Pixel values<a class="anchor-link" href="#Calculating-Average-Pixel-values"> </a></h2><p>The convenient part of having used tensors, is that now we can quickly calculate the mean across a desired dimension (in our case: flatten each stack into a single 28x28 tensor containing the average values of each pixel in the stack). 
+<h3 id="Calculating-Average-Pixel-values">Calculating Average Pixel values<a class="anchor-link" href="#Calculating-Average-Pixel-values"> </a></h3><p>The convenient part of having used tensors, is that now we can quickly calculate the mean across a desired dimension (in our case: flatten each stack into a single 28x28 tensor containing the average values of each pixel in the stack). 
 {% include tip.html content='Think of it like printing out all the PNG images for a specific digit and stacking each page one on top of the other. That&#8217;s exactly what we did with out stacked tensor. And now, with special X-Ray vision, we are going to reduce the stack to a single page by taking the average value for each printed pixel across the stack of pages. ' %}</p>
 
 </div>
@@ -1846,7 +1846,14 @@ Epoch #49 0.8005
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="&#160;Activating-our-network!">&#160;Activating our network!<a class="anchor-link" href="#&#160;Activating-our-network!"> </a></h2><p>You may have noticed that we called our model a "MNISTLinearRegressor". I have to break it to you, what we've done up to now is create a linear regressor with a self-correcting capability through Stochastic Gradient Descent...<em>not</em> a neural network. That being said, we've gotten some pretty impressive results with just this linear classifier. However, a neural network is non-linear. How do we break the linearity? That is what we'll tack in <strong>Part 2</strong> (to be published soon)!</p>
+<h2 id="Next-Steps">Next Steps<a class="anchor-link" href="#Next-Steps"> </a></h2><p>You may have noticed that we called our model a "MNISTLinearRegressor". I have to break it to you, what we've done up to now is essentially create a linear regressor with a self-correcting capability through Stochastic Gradient Descent...<em>not</em> a deep neural network.</p>
+<p>We've also got some aspects of our current model we need to improve:</p>
+<ul>
+<li>our loss function applies Softmax naively, which makes for a very "hit or miss" training performance depending on our initial parameters. The drawback of Softmax is it tends to be "harsh" on parameters by exasperating one over the rest. This is great when making final predictions and want 1 probability to shine through, but not when we want a nice stable loss function to help the model improve. We'll see how we can convert our naive loss function into an industry standard one, by <em>softening</em> Softmax (ironic, isn't it?). This will help get us better and more stable training accuracy in less than 4-5 epochs!</li>
+<li>our model is also quite "rigid" in the sense that it's only built for MNIST. We'll generalize it into a general Linear Model, that accepts any number of labels in a much more elegant way!</li>
+<li>Lastly, a neural network is non-linear. How do we break this linearity and make our model orders of magnitude more powerful?</li>
+</ul>
+<p>All of this coming up in <strong>Part 2</strong> (to be published soon)!</p>
 
 </div>
 </div>
