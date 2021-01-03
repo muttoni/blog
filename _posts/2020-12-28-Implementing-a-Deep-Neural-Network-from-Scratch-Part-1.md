@@ -1,6 +1,6 @@
 ---
 keywords: machine learning, ml, deep neural network, neural network, convolutional neural network, beginner concepts, fastai, fast.ai, pytorch
-description: In this series we'll build a Neural Network from the ground up, covering basic concepts along the way. In Part 1 we will cover some fundamentals, create a simple baseline algorithm and build our first model.
+description: In this series we build a Neural Network from the ground up, covering basic concepts along the way. In Part 1 we will cover some fundamentals, create a simple baseline algorithm and build our first linear model.
 title: Implementing a Deep Neural Network from Scratch - Part 1
 toc: true
 badges: false
@@ -158,7 +158,11 @@ layout: notebook
 
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">path</span> <span class="o">=</span> <span class="n">untar_data</span><span class="p">(</span><span class="n">URLs</span><span class="o">.</span><span class="n">MNIST</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="o">!</span>pip install -Uq fastbook
+<span class="kn">from</span> <span class="nn">fastbook</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1"># Download the MNIST dataset using fast.ai&#39;s convenient function</span>
+<span class="n">path</span> <span class="o">=</span> <span class="n">untar_data</span><span class="p">(</span><span class="n">URLs</span><span class="o">.</span><span class="n">MNIST</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -938,7 +942,7 @@ Digit 9 : 77.6%
 <h3 id="The-Softmax-Function">The Softmax Function<a class="anchor-link" href="#The-Softmax-Function"> </a></h3><p>The beautify of the Softmax function is that it normalizes a group of values from 0 to 1 in a way so that each value is interrelated with the others: together they sum to 1. This is perfect for generating a list of interrelated probabilities. If we were creating non-mutually exclusive classification, we would use Softmax's cousin Sigmoid, that normalizes each value from 0 to 1 <em>independently</em>. I'll leave diving deeper on the topic of Softmax vs Sigmoid as homework--you can start with this brilliant <a href="https://glassboxmedicine.com/2019/05/26/classification-sigmoid-vs-softmax/">blog post</a>.</p>
 <p>Let's admire Softmax in all of its glory:</p>
 <p>$\text{Softmax}(x_i) = \frac{e^{x_i}}{\sum_j{e^{x_j}}}$</p>
-<p>Don't worry, it's a lot simpler than it looks, and is even simpler once we code it.Here's a quick explanation of how our Softmax works in three steps:</p>
+<p>Don't worry, it's a lot simpler than it looks, and is even simpler once we code it. Here's a quick explanation of how our Softmax works in three steps:</p>
 <ol>
 <li>Given a list of values, we calculate the exponential for each value, that is: $e^{n}$. Where $n$ is our value and $e$ is Euler's number, a <a href="https://en.wikipedia.org/wiki/Eulers_number">special number in Mathematics</a>, and at the heart of the exponential function.</li>
 <li>We sum the exponential values (the Sigma symbol $\sum$ means <em>sum</em>).</li>
