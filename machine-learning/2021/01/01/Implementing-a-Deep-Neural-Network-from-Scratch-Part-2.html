@@ -110,7 +110,7 @@ window.onload = wrap_img;
        • <span class="read-time" title="Estimated read time">
     
     
-      48 min read
+      49 min read
     
 </span></p>
 
@@ -156,6 +156,7 @@ window.onload = wrap_img;
 <li class="toc-entry toc-h3"><a href="#Analyzing-Results">Analyzing Results </a></li>
 <li class="toc-entry toc-h3"><a href="#Learning-Rates">Learning Rates </a></li>
 <li class="toc-entry toc-h3"><a href="#Epochs">Epochs </a></li>
+<li class="toc-entry toc-h3"><a href="#Layers">Layers </a></li>
 </ul>
 </li>
 <li class="toc-entry toc-h2"><a href="#Conclusions">Conclusions </a>
@@ -1822,7 +1823,7 @@ Epoch #99 Loss: 0.2668 Accuracy: 0.9119
 <h3 id="Analyzing-Results">
 <a class="anchor" href="#Analyzing-Results" aria-hidden="true"><span class="octicon octicon-link"></span></a>Analyzing Results<a class="anchor-link" href="#Analyzing-Results"> </a>
 </h3>
-<p>Deep Neural Networks need to train longer as there are more parameters to tune. In our case, our 2-layer network after 100 epochs reached 91-92% accuracy with a learning rate of 0.1. Aside from the depth (layers) and breadth (parameters) of the model, learning rate also affects the number of epochs it takes as it "weighs down" the updating "power" of the optimizer so as to not overshoot the minimum loss.</p>
+<p>Deep Neural Networks need to train longer as there are more parameters to tune. In our case, our 2-layer network after 100 epochs reached 91-92% accuracy with a learning rate of 0.1. Aside from the depth (layers) and breadth (parameters) of the model, learning rate also affects the number of epochs it takes as it "weighs down" the updating "power" of the optimizer so as to not overshoot the minimum loss. All of these decisions are called <strong>hyper-parameters</strong>: parameters that are used to configured our model. They are called differents o as not to confuse them with our underlying model's parameters (weights and baises).</p>
 <p>By looking at the results above, we see how the training loss is still has room for improvement (remember, we're trying to get that as close to 0 as possible). When training a model it's important to consider over-fitting vs model accuracy. If your validation accuracy and training loss are both moving in the direction you want, it means you still have room to train! It doesn't make sense to continue training if instead you see the validation accuracy degrading consistently as that would be a clear sign of over-fitting on the training data.</p>
 <p>To visualize all this better, let's create a quick function to visualize how our training loss and validation accuracy evolve over time (epochs).</p>
 
@@ -2348,7 +2349,65 @@ Epoch #249 Loss: 0.117 Accuracy: 0.9393
 <div class="cell border-box-sizing text_cell rendered">
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Hopefully all these experiments show that machine learning is a craft of delicately balancing different constraints and making trade-offs, with only loose guidelines to guide our decision making! It is definitely not an exact science with strict, clear cut rules. There are so many parameters to take into consideration: batch sizes, learning rates, epochs, dataset size, layer count, parameter count. And that's not including other important decisions such as what type of loss function to use (spoiler alert, cross-entropy loss is only one of many!), what activation function to use, etc. This is is why machine learning is a field where there's plenty of room for experimentation and is full of unexplored territory.</p>
+<h3 id="Layers">
+<a class="anchor" href="#Layers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Layers<a class="anchor-link" href="#Layers"> </a>
+</h3>
+<p>I can already hear you asking: "ok, I got the point about learning rates and epochs, but <strong>what about the depth</strong>?". Well, let's find out! Let's add a hidden layer with 20 input parameters and 20 output parameters.</p>
+<p>Let's train it with a learning rate of 0.05 and let's leave it running for a long time (2000 epochs), to see how it evolves.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">my_nn</span> <span class="o">=</span> <span class="n">DeepClassifier</span><span class="p">(</span>
+  <span class="n">LinearModel</span><span class="p">(</span><span class="mi">28</span><span class="o">*</span><span class="mi">28</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>
+  <span class="n">LinearModel</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>
+  <span class="n">LinearModel</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">my_nn</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">train_dl</span><span class="o">=</span><span class="n">train_dl</span><span class="p">,</span> 
+    <span class="n">valid_dl</span><span class="o">=</span><span class="n">valid_dl</span><span class="p">,</span>
+    <span class="n">lr</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">epochs</span><span class="o">=</span><span class="mi">2000</span>
+<span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="/blog/images/copied_from_nb/images/3lyr-nn-results-lr05xl.png" alt="" title="1 hidden layer, lr=0.05, 2000 epochs"></p>
+<p>First of all, let's pat ourselves on the back as we just ran our first real deep neural network with a hidden layer! From the graph above we can see our model's performance. It reached 95% accuracy and a loss of around 0.127. Here's a better look at the graph from epochs 1000 to 2000.</p>
+<p><img src="/blog/images/copied_from_nb/images/3lyr-nn-results-lr05xlz.png" alt="" title="1 hidden layer, lr=0.05, 2000 epochs, from epoch 1000"></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Note that we could add as many layers as we wanted, but remember the tradeoff between complexity and training time and over-fitting! I encourage you to try experimenting with different layers and tweak our hyper-parameters accordingly.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Hopefully all these experiments show that machine learning is a craft of delicately balancing different constraints and making trade-offs, with only loose guidelines to guide our decision making! It is definitely not an exact science with strict, clear cut rules. There are so many hyper-parameters to take into consideration: batch sizes, learning rates, epochs, dataset size, layer count, parameter count, and variables to account for (quality of data, computing resources, etc). And that's not including other important decisions such as what type of loss function to use (spoiler alert, cross-entropy loss is only one of many!), what activation function to use, etc. This is is why machine learning is a field where there's plenty of room for experimentation and is full of unexplored territory.</p>
 
 </div>
 </div>
