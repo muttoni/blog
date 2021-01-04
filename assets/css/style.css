@@ -482,7 +482,7 @@ pre, code { background-color: transparent; border: none; }
 
 .input_area pre { padding-top: 8px !important; padding-bottom: 8px !important; border-left: none; }
 
-.output_area pre { border-radius: 0px; border-left: 1px solid #c8cad5; color: #515151; }
+.output_area pre { border-radius: 0px; border-left: 1px solid #c8cad5; margin-left: 0rem !important; color: #515151; }
 
 .output_area pre:before { content: "OUTPUT"; display: block; margin-bottom: 4px; font-size: 10px; color: #c8cad5; }
 
