@@ -263,25 +263,15 @@ window.onload = wrap_img;
 <a class="anchor" href="#Improving-our-Label-Structure" aria-hidden="true"><span class="octicon octicon-link"></span></a>Improving our Label Structure<a class="anchor-link" href="#Improving-our-Label-Structure"> </a>
 </h2>
 <p>Our labels in Part 1 were represented by a vector of size 10 with a '1' flag indicating the correct digit at the corresponding index, and '0' everywhere else. In our loss function, we then compared whether the max index of our predictions was equivalent to the index in our target labels where the index was '1'. Here's a quick example of how our old labels worked:</p>
+<p>A target label $y$ for the digit '3':</p>
 
-<pre><code># A target label for the digit '3'
-[0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
-          ^ a '1' corresponding to the correct digit
+<pre><code>[0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+          ^ a '1' flagging the correct digit at its index (3)</code></pre>
+<p>An example prediction from our model:</p>
 
-# An example prediction from our model
-[ 
-  2.0e-03, 
-  1.3e-07, 
-  4.0e-8,
-  9.9e-01, &lt; index of max value corresponds to the label index!
-  2.0e-05, 
-  1.6e-04, 
-  4.4e-9, 
-  7.0e-09, 
-  1.3e-06, 
-  2.1e-4, 
-  4.0e-7
-]</code></pre>
+<pre><code>[2.0e-3, 1.3e-7, 4.0e-8, 9.9e-1, 2.0e-5, 1.6e-4, 4.4e-9, 7.0e-9, 1.3e-6, 2.1e-4, 4.0e-7]
+                         ^ index of max value corresponds to the y label index, 
+                           indicating a correct prediction.</code></pre>
 
 </div>
 </div>
@@ -1653,7 +1643,10 @@ Epoch #4 0.8532
     </div>
 </div>
 </div>
-
+<details class="description">
+      <summary class="btn btn-sm" data-open="Hide Output" data-close="Show Output"></summary>
+        <p>
+</p>
 <div class="output_wrapper">
 <div class="output">
 
@@ -1767,9 +1760,18 @@ Epoch #99 Loss: 0.2668 Accuracy: 0.9119
 </div>
 </div>
 
+    </details>
 </div>
     
 
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>91%! (toggle the output to see the various training losses and accuracy scores over each epoch). Let's also test our beloved sample '5' prediction.</p>
+
+</div>
+</div>
+</div>
     
     
 <div class="cell border-box-sizing code_cell rendered">
@@ -1809,7 +1811,7 @@ Epoch #99 Loss: 0.2668 Accuracy: 0.9119
 <div class="cell border-box-sizing text_cell rendered">
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>91% accuracy! And our beloved sample '5' prediction gives us a confidence of 95% that the digit is 5. Nice! Now let's discuss our results in more detail.</p>
+<p>It gives us a confidence of 95% that the digit is 5. Nice! Now let's discuss our results in more detail.</p>
 
 </div>
 </div>
@@ -1914,7 +1916,7 @@ Epoch #99 Loss: 0.2668 Accuracy: 0.9119
 <div class="cell border-box-sizing text_cell rendered">
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><img src="/blog/images/copied_from_nb/images/2lyr-nn-results-trio.png" alt="" title="How different learning rates impact training and accuracy over 100 epochs"></p>
+<p><img src="/blog/images/copied_from_nb/images/2lyr-nn-results-trio.png" alt=""></p>
 
 </div>
 </div>
@@ -2341,7 +2343,7 @@ Epoch #249 Loss: 0.117 Accuracy: 0.9393
 <a class="anchor" href="#Conclusions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conclusions<a class="anchor-link" href="#Conclusions"> </a>
 </h2>
 <p>This marks the end of this series of building a Deep Neural Network from scratch. I realize these are two very long posts, but rather than split them up for the sake of splitting them up, I decided to condense everything into 2 parts so it's easier to keep track of links and follow along step by step. As linked above, the final <code>DeepClassifier</code> code is available <a href="https://gist.github.com/muttoni/d5ce076fdc83b8f82b9971c5c8bf6b2d">here</a>. Follow the steps in the series and experiment with all the possible parameter choices!</p>
-<p>I really hope you enjoyed the series and learned something along the way. If you want to reach out, feel free to find my email in the "About" page or leave a comment below. With that, I'll close and wish you all the best in ~y~our machine learning journey!</p>
+<p>I really hope you enjoyed the series and learned something along the way. If you want to reach out, feel free to find my email in the "About" page or leave a comment below. With that, I'll close and wish you all the best in your machine learning journey!</p>
 <h3 id="Aknowledgements">
 <a class="anchor" href="#Aknowledgements" aria-hidden="true"><span class="octicon octicon-link"></span></a>Aknowledgements<a class="anchor-link" href="#Aknowledgements"> </a>
 </h3>

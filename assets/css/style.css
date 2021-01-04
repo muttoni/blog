@@ -431,7 +431,7 @@ pre code { font-size: 15px !important; }
 
 .language-python + .language-plaintext pre { background-color: white !important; }
 
-.input_area pre, .input_area div { margin-bottom: 1.0rem !important; margin-top: 1.5rem !important; padding-bottom: 0 !important; padding-top: 0 !important; background: #323443 !important; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; font-family: Menlo, Monaco, Consolas, "Lucida Console", Roboto, Ubuntu, monospace; border-radius: 5px; font-size: 105%; }
+.input_area pre, .input_area div { margin-bottom: 1.0rem !important; margin-top: 1.5rem !important; background: #323443 !important; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; font-family: Menlo, Monaco, Consolas, "Lucida Console", Roboto, Ubuntu, monospace; border-radius: 5px; font-size: 105%; }
 
 .output_area pre, .output_area div { margin-bottom: 1rem !important; margin-top: 0rem !important; padding-bottom: 0 !important; padding-top: 0 !important; }
 
@@ -478,8 +478,16 @@ pre code { font-size: 15px !important; }
 
 p code { font-size: 19px; }
 
-pre, code { background-color: transparent; }
+pre, code { background-color: transparent; border: none; }
 
-tt, code { font-size: 18px !important; }
+.input_area pre { padding-top: 8px !important; padding-bottom: 8px !important; border-left: none; }
+
+.output_area pre { border-radius: 0px; border-left: 1px solid #c8cad5; color: #515151; }
+
+.output_area pre:before { content: "OUTPUT"; display: block; margin-bottom: 4px; font-size: 10px; color: #c8cad5; }
+
+tt, code { font-size: 18px !important; font-weight: 500; }
+
+.output_svg.output_subarea.output_execute_result { color: transparent; }
 
 /*# sourceMappingURL=style.css.map */
