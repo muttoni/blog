@@ -5,7 +5,7 @@ description: What are they and how do they work together? In this post we will g
 categories: [machine-learning, fastai]
 keywords: machine learning, ml, fast.ai, fastai, dataloaders, datablocks, pytorch, data block, data loader
 title: Understanding DataBlocks and DataLoaders in fast.ai
-image: images/fastai-logo.jpeg
+image: images/db-dl-fastai.png
 ---
 
 ## Introduction
