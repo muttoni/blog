@@ -478,6 +478,8 @@ pre code { font-size: 15px !important; }
 
 p code { font-size: 19px; }
 
+.home > p { font-size: 18px; }
+
 pre, code { background-color: transparent; border: none; }
 
 .input_area pre { padding-top: 8px !important; padding-bottom: 8px !important; border-left: none; }

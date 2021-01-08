@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Implementing a Learning Rate Finder from Scratch | Andrea Muttoni</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Implementing a Learning Rate Finder from Scratch" />
+<meta name="author" content="Andrea Muttoni" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Choosing the right learning rate is important for DNNs. In this post we implement a Learning Rate Finder from scratch, taking inspiration from Leslie Smith’s LR range test–a technique implemented in popular libraries and frameworks such as fastai to find optimal learning rates to train a model." />
+<meta property="og:description" content="Choosing the right learning rate is important for DNNs. In this post we implement a Learning Rate Finder from scratch, taking inspiration from Leslie Smith’s LR range test–a technique implemented in popular libraries and frameworks such as fastai to find optimal learning rates to train a model." />
+<link rel="canonical" href="https://muttoni.github.io/blog/machine-learning/2021/01/08/Implementing-a-Learning-Rate-Finder-from-Scratch.html" />
+<meta property="og:url" content="https://muttoni.github.io/blog/machine-learning/2021/01/08/Implementing-a-Learning-Rate-Finder-from-Scratch.html" />
+<meta property="og:site_name" content="Andrea Muttoni" />
+<meta property="og:image" content="https://muttoni.github.io/blog/images/lrf-from-scratch.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-01-08T00:00:00-06:00" />
+<script type="application/ld+json">
+{"url":"https://muttoni.github.io/blog/machine-learning/2021/01/08/Implementing-a-Learning-Rate-Finder-from-Scratch.html","@type":"BlogPosting","headline":"Implementing a Learning Rate Finder from Scratch","dateModified":"2021-01-08T00:00:00-06:00","datePublished":"2021-01-08T00:00:00-06:00","image":"https://muttoni.github.io/blog/images/lrf-from-scratch.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://muttoni.github.io/blog/machine-learning/2021/01/08/Implementing-a-Learning-Rate-Finder-from-Scratch.html"},"author":{"@type":"Person","name":"Andrea Muttoni"},"description":"Choosing the right learning rate is important for DNNs. In this post we implement a Learning Rate Finder from scratch, taking inspiration from Leslie Smith’s LR range test–a technique implemented in popular libraries and frameworks such as fastai to find optimal learning rates to train a model.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://muttoni.github.io/blog/feed.xml" title="Andrea Muttoni" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BLM1GZKCEL"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-BLM1GZKCEL');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">Andrea Muttoni</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Implementing a Learning Rate Finder from Scratch</h1><p class="page-description">Choosing the right learning rate is important for DNNs. In this post we implement a Learning Rate Finder from scratch, taking inspiration from Leslie Smith's LR range test--a technique implemented in popular libraries and frameworks such as fastai to find optimal learning rates to train a model.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-01-08T00:00:00-06:00" itemprop="datePublished">
+        Jan 8, 2021
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      22 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#machine-learning">machine-learning</a>
+        
+      
+      </p>
+    
+
+    
+      
+        <div class="pb-5 d-flex flex-wrap flex-justify-end">
+          <div class="px-2">
+
+    <a href="https://github.com/muttoni/blog/tree/master/_notebooks/2021-01-08-Implementing-a-Learning-Rate-Finder-from-Scratch.ipynb" role="button" target="_blank">
+<img class="notebook-badge-image" src="/blog/assets/badges/github.svg" alt="View On GitHub">
+    </a>
+</div>
+
+          <div class="px-2">
+    <a href="https://mybinder.org/v2/gh/muttoni/blog/master?filepath=_notebooks%2F2021-01-08-Implementing-a-Learning-Rate-Finder-from-Scratch.ipynb" target="_blank">
+        <img class="notebook-badge-image" src="/blog/assets/badges/binder.svg" alt="Open In Binder"/>
+    </a>
+</div>
+
+          <div class="px-2">
+    <a href="https://colab.research.google.com/github/muttoni/blog/blob/master/_notebooks/2021-01-08-Implementing-a-Learning-Rate-Finder-from-Scratch.ipynb" target="_blank">
+        <img class="notebook-badge-image" src="/blog/assets/badges/colab.svg" alt="Open In Colab"/>
+    </a>
+</div>
+        </div>
+      </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#Introduction">Introduction </a></li>
+<li class="toc-entry toc-h2"><a href="#Understanding-the-Learning-Rate">Understanding the Learning Rate </a></li>
+<li class="toc-entry toc-h2"><a href="#The-Learning-Rate-Finder">The Learning Rate Finder </a></li>
+<li class="toc-entry toc-h2"><a href="# Getting-Started"> Getting Started </a></li>
+<li class="toc-entry toc-h2"><a href="# Requirements"> Requirements </a>
+<ul>
+<li class="toc-entry toc-h3"><a href="# SGD_Optimizer"> SGD_Optimizer </a></li>
+<li class="toc-entry toc-h3"><a href="#LinearModel">LinearModel </a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#DeepClassifier">DeepClassifier </a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#Prep-Work">Prep Work </a></li>
+<li class="toc-entry toc-h3"><a href="#Implementing-lr_finder()">Implementing lr_finder() </a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="# Demo"> Demo </a></li>
+<li class="toc-entry toc-h2"><a href="#Analyzing-the-lr_finder-plot">Analyzing the lr_finder plot </a></li>
+<li class="toc-entry toc-h2"><a href="#Conclusion">Conclusion </a></li>
+</ul><!--
+#################################################
+### THIS FILE WAS AUTOGENERATED! DO NOT EDIT! ###
+#################################################
+# file to edit: _notebooks/2021-01-08-Implementing-a-Learning-Rate-Finder-from-Scratch.ipynb
+-->
+
+<div class="container" id="notebook-container">
+        
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Introduction">
+<a class="anchor" href="#Introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction<a class="anchor-link" href="#Introduction"> </a>
+</h2>
+<p>In this post we will implement a <strong>learning rate finder</strong> from scratch. A learning rate finder helps us find sensible learning rates for our models to train with, including minimum and maximum values to use in a <strong>cyclical learning rate</strong> policy. Both concepts were invented by Leslie Smith and I suggest you check out his <a href="https://arxiv.org/pdf/1506.01186.pdf">paper</a><sup id="fnref-1" class="footnote-ref"><a href="#fn-1">1</a></sup>!</p>
+<p>We'll implement the learning rate finder (and cyclical learning rates in a future post) into our Deep Neural Network created from scratch in the 2-part series <a href="https://muttoni.github.io/blog/machine-learning/2020/12/28/Implementing-a-Deep-Neural-Network-from-Scratch-Part-1.html">Implementing a Deep Neural Network from Scratch</a>. Check that out first if you haven't read it already!</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Understanding-the-Learning-Rate">
+<a class="anchor" href="#Understanding-the-Learning-Rate" aria-hidden="true"><span class="octicon octicon-link"></span></a>Understanding the Learning Rate<a class="anchor-link" href="#Understanding-the-Learning-Rate"> </a>
+</h2>
+<p>Before we start, what <em>is</em> the learning rate? The learning rate is just a value we multiply our gradients by in Stochastic Gradient Descent before updating our parameters with those values. Think of it like a "weight" that reduces the impact of each step change so as to ensure we are not over-shooting our loss function. If you imagine our loss function like a parabola, and our parameters starting somehwere along the parabola, descending along by a specific amount will bring us further "down" in the parabola, to it's minimum point eventually. If the step amount is too big however, we risk overshooting that minimum point. That's where the learning rate comes into play: it helps us achieve very small steps if desired.</p>
+<p>To refresh your memory, here is what happens in the optimization step of Stochastic Gradient Descent (<a href="https://muttoni.github.io/blog/machine-learning/2020/12/28/Implementing-a-Deep-Neural-Network-from-Scratch-Part-1.html">Part 1</a> of our DNN series explains this formula in more detail, so read that first):</p>
+<p>$ w := w - \eta \nabla Q({w}) $</p>
+<p>Our parameter $w$ is updated by subtracting its gradient calculated with respect to the loss function $\nabla Q({w})$ after multiplying it by a weighing factor $\eta$. That weighing factor $\eta$ is our learning rate!</p>
+<p>It's even easier in code:</p>
+<div class="highlight"><pre><span></span><span class="c1"># part of the .step() method in our SGD_Optimizer</span>
+<span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">data</span> <span class="o">-=</span> <span class="n">p</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">data</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr</span>
+</pre></div>
+<p>This is outlined in the <code>.step</code> method of our optimizer (check the setup code in the next section).
+As we saw towards the end of <a href="https://muttoni.github.io/blog/machine-learning/2021/01/01/Implementing-a-Deep-Neural-Network-from-Scratch-Part-2.html">Part 2</a> of our Implementing a Deep Neural Network from Scratch series, the learning rate has a <em>big</em> impact on training for our model: the lower the learning rate, the more epochs required to reach a given accuracy, the higher the learning rate, the higher risk of overshooting (or never reaching) the minimum loss. There's a lot more factors at play that we cover in that series, but for now let's just consider the learning rate.</p>
+<p>Another aspect of learning rates is that a single value is rarely optimal for the duration of the training. We could say that its efficacy <strong>degrades over time</strong> (time measured in batches/epochs). That's why common techniques include decreasing the learning rate by a step-wise fixed amount or by an exponentially decreasing amount during the course of the training. The logic being that as the model is further into training and is approaching the minimum loss, it needs less pronounced updates (steps), and therefore would benefit from smaller increments.</p>
+<h2 id="The-Learning-Rate-Finder">
+<a class="anchor" href="#The-Learning-Rate-Finder" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Learning Rate Finder<a class="anchor-link" href="#The-Learning-Rate-Finder"> </a>
+</h2>
+<p>The <strong>learning rate finder</strong>, or more appropriately <strong>learning rate <em>range</em> finder</strong>, is a method outlined in a <a href="https://arxiv.org/pdf/1506.01186.pdf">paper</a> by Leslie Smith written in 2015[^1]. The paper introduces the concept of <strong>cyclical learning rates</strong> (i.e. repeatedly cycling between learning rates inbetween a set minimum and a maximum has shown to be effective for training--a method we will implement from scratch in a future post!) whereby the minimum and maximum values to cycle through are found by a function that Leslie Smith defines as the "<em>LR range test</em>". Here's what the author himself has to say about it:</p>
+<blockquote>
+<p>There is a simple way to estimate reasonable minimum
+and maximum boundary values with one training run of the
+network for a few epochs. It is a “LR range test”; run your
+model for several epochs while letting the learning rate increase linearly between low and high LR values. This test
+is enormously valuable whenever you are facing a new architecture or dataset.<sup id="fnref-1" class="footnote-ref"><a href="#fn-1">1</a></sup></p>
+</blockquote>
+<p>So where does the learning rate finder come into play? Well, it helps us find how learning rates affect our training loss, helping us spot a "sweet spot" of ranges that maximize the loss. That extremes of that range will also be  minimum and maximum values to use in the cyclical learning rates policy Leslie Smith outlines in his paper -- before we can implement cyclical learning rates, we need to implement a learning rate range finder!</p>
+<p>To give you an idea of what we're trying to create, let's see <a href="https://fastai1.fast.ai/callbacks.lr_finder.html">fast.ai</a>'s implementation, probably one of the first frameworks to implement this LR range test. fast.ai offers a convenient helper function called the Learning Rate Finder (<code>Learner.lr_finder()</code>) that helps us see the effect a variety of learning rates have on our model's training performance as well as suggest a <code>min_grad_lr</code> where the gradient of the training loss is steepest:
+<img src="/blog/images/copied_from_nb/images/lr_finder.png" alt="image.png"></p>
+<p>Let's implement something similar!</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id=" Getting-Started">
+<a class="anchor" href="#%C2%A0Getting-Started" aria-hidden="true"><span class="octicon octicon-link"></span></a> Getting Started<a class="anchor-link" href="#%C2%A0Getting-Started"> </a>
+</h2>
+<p>Below is a recap of all the preparatory steps to setup our data pipeline. In order, we'll download the data, generate a list of file paths, create training and validation tensor stacks from the file paths, convert those tensors from rank-2 (2D matrix) tensors (i.e. size: 28, 28) to rank-1 (1D vector) tensors (i.e. size: 784). We'll then generate labels corresponding to the digit index and merge the input tensors and labels into datasets to create DataLoader. This will provide us with minibatches of sample data to run our SGD along.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<details class="description">
+      <summary class="btn btn-sm" data-open="Hide Code" data-close="Show Code"></summary>
+        <p></p>
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Requirements</span>
+<span class="c1"># !pip install -Uq fastbook # includes all the common imports (plt, fastai, pytorch, etc)</span>
+
+<span class="c1"># Download the data</span>
+<span class="n">path</span> <span class="o">=</span> <span class="n">untar_data</span><span class="p">(</span><span class="n">URLs</span><span class="o">.</span><span class="n">MNIST</span><span class="p">)</span>
+
+<span class="c1"># Import the paths of our training and testing images</span>
+<span class="n">training</span> <span class="o">=</span> <span class="p">{</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s1">'</span> <span class="p">:</span> <span class="p">(</span><span class="n">path</span><span class="o">/</span><span class="sa">f</span><span class="s1">'training/</span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span><span class="o">.</span><span class="n">ls</span><span class="p">()</span><span class="o">.</span><span class="n">sorted</span><span class="p">()</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="p">}</span>
+<span class="n">testing</span> <span class="o">=</span> <span class="p">{</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s1">'</span> <span class="p">:</span> <span class="p">(</span><span class="n">path</span><span class="o">/</span><span class="sa">f</span><span class="s1">'testing/</span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span><span class="o">.</span><span class="n">ls</span><span class="p">()</span><span class="o">.</span><span class="n">sorted</span><span class="p">()</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="p">}</span>
+
+<span class="c1"># Prepare training tensor stacks</span>
+<span class="n">training_tensors</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span>
+            <span class="n">tensor</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">digit</span><span class="p">))</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">/</span><span class="mi">255</span> <span class="k">for</span> <span class="n">digit</span> <span class="ow">in</span> <span class="n">training</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s1">'</span><span class="p">]</span>
+          <span class="p">])</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+      <span class="p">]</span>
+
+<span class="n">validation_tensors</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span>
+            <span class="n">tensor</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">digit</span><span class="p">))</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">/</span><span class="mi">255</span> <span class="k">for</span> <span class="n">digit</span> <span class="ow">in</span> <span class="n">testing</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s1">'</span><span class="p">]</span>
+          <span class="p">])</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+      <span class="p">]</span>
+
+
+<span class="c1"># Convert our 2D image tensors (28, 28) into 1D vectors</span>
+<span class="n">train_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">training_tensors</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="o">*</span><span class="mi">28</span><span class="p">)</span>
+<span class="n">valid_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">validation_tensors</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="o">*</span><span class="mi">28</span><span class="p">)</span>
+
+<span class="c1"># Generate our labels based on the digit each image represents</span>
+<span class="n">train_y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">training</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]))</span>
+<span class="n">valid_y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">testing</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]))</span>
+
+<span class="c1"># Create datasets to feed into the dataloaders</span>
+<span class="n">dset</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">train_x</span><span class="p">,</span> <span class="n">train_y</span><span class="p">))</span>
+<span class="n">dset_valid</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">valid_x</span><span class="p">,</span> <span class="n">valid_y</span><span class="p">))</span>
+
+<span class="c1"># Setup our dataloders</span>
+<span class="n">dl</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">dset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">valid_dl</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">dset_valid</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+    </details>
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea ">
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We'll also import the code that we created in our series on <a href="https://muttoni.github.io/blog/machine-learning/2020/12/28/Implementing-a-Deep-Neural-Network-from-Scratch-Part-1.html">Implementing a Deep Neural Network from Scratch</a> in Python. The code we'll need is our general purpose <code>LinearModel</code>, our SGD optimizer <code>SGD_Optimizer</code> and our beloved <code>DeepClassifier</code>. Feel free to toggle the code below to see how each one works.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<details class="description">
+      <summary class="btn btn-sm" data-open="Hide Code" data-close="Show Code"></summary>
+        <p></p>
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># General purpose Linear Model</span>
+<span class="k">class</span> <span class="nc">LinearModel</span><span class="p">:</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">inputs</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span> <span class="o">=</span> <span class="n">outputs</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_params</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span>
+
+  <span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="nd">@self</span><span class="o">.</span><span class="n">weights</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span>
+
+  <span class="k">def</span> <span class="nf">_init_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span><span class="p">))</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
+    <span class="n">bias</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_size</span><span class="p">))</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">weights</span><span class="p">,</span> <span class="n">bias</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+    </details>
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<details class="description">
+      <summary class="btn btn-sm" data-open="Hide Code" data-close="Show Code"></summary>
+        <p></p>
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># General purpose SGD Optimizer</span>
+<span class="k">class</span> <span class="nc">SGD_Optimizer</span><span class="p">:</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">lr</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lr</span> <span class="o">=</span> <span class="n">lr</span> 
+  
+  <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">data</span> <span class="o">-=</span> <span class="n">p</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">data</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">grad</span> <span class="o">=</span> <span class="kc">None</span>
+    
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+    </details>
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<details class="description">
+      <summary class="btn btn-sm" data-open="Hide Code" data-close="Show Code"></summary>
+        <p></p>
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># General Purpose Classifier</span>
+<span class="k">class</span> <span class="nc">DeepClassifier</span><span class="p">:</span>
+  <span class="sd">"""</span>
+<span class="sd">  A multi-layer Neural Network using ReLU activations and SGD</span>
+<span class="sd">  params: layers to use (LinearModels)</span>
+<span class="sd">  methods: fit(train_dl, valid_dl, epochs, lr) and predict(image_tensor)</span>
+<span class="sd">  """</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">layers</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">accuracy_scores</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">training_losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="n">layers</span>
+
+  <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'train_dl'</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">valid_dl</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'valid_dl'</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'epochs'</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lr</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'lr'</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'verbose'</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">optimizers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">epoch_losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">last_layer_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SGD_Optimizer</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">epochs</span><span class="p">):</span>
+      <span class="k">for</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span><span class="p">:</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">(</span><span class="n">xb</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backward</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">yb</span><span class="p">)</span>
+  
+      <span class="bp">self</span><span class="o">.</span><span class="n">_validate_epoch</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_tensor</span><span class="p">):</span>
+    <span class="n">probabilities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">(</span><span class="n">image_tensor</span><span class="p">)</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">prediction</span> <span class="o">=</span> <span class="n">probabilities</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">prediction</span><span class="p">,</span> <span class="n">probabilities</span>
+
+  <span class="k">def</span> <span class="nf">_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xb</span><span class="p">):</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">xb</span>
+    <span class="k">for</span> <span class="n">layer_idx</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">layer_idx</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_layer_index</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ReLU</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+  <span class="k">def</span> <span class="nf">_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">yb</span><span class="p">):</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loss_function</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">yb</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">epoch_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizers</span><span class="p">:</span> <span class="n">opt</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_batch_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span><span class="p">):</span>
+    <span class="n">predictions</span> <span class="o">=</span> <span class="n">xb</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">max_indices</span> <span class="o">=</span> <span class="n">xb</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">corrects</span> <span class="o">=</span> <span class="n">max_indices</span> <span class="o">==</span> <span class="n">yb</span> 
+    <span class="k">return</span> <span class="n">corrects</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> 
+
+  <span class="k">def</span> <span class="nf">_validate_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    <span class="n">accs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_batch_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">(</span><span class="n">xb</span><span class="p">),</span> <span class="n">yb</span><span class="p">)</span> <span class="k">for</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_dl</span><span class="p">]</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">accs</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">accuracy_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
+    <span class="n">epoch_loss</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">epoch_losses</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">epoch_losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">training_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">epoch_loss</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Epoch #</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="s1">'Loss:'</span><span class="p">,</span> <span class="n">epoch_loss</span><span class="p">,</span> <span class="s1">'Accuracy:'</span><span class="p">,</span> <span class="n">score</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_loss_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+    <span class="n">log_sm_preds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">predictions</span><span class="p">))</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="o">-</span><span class="n">log_sm_preds</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">targets</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">results</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_ReLU</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.0</span><span class="p">))</span>
+
+  <span class="k">def</span> <span class="nf">_print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+      <span class="nb">print</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+    </details>
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p></p>
+<div class="flash flash-success">
+    <svg class="octicon octicon-checklist octicon octicon-checklist octicon octicon-checklist" viewbox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M2.5 1.75a.25.25 0 01.25-.25h8.5a.25.25 0 01.25.25v7.736a.75.75 0 101.5 0V1.75A1.75 1.75 0 0011.25 0h-8.5A1.75 1.75 0 001 1.75v11.5c0 .966.784 1.75 1.75 1.75h3.17a.75.75 0 000-1.5H2.75a.25.25 0 01-.25-.25V1.75zM4.75 4a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5h-4.5zM4 7.75A.75.75 0 014.75 7h2a.75.75 0 010 1.5h-2A.75.75 0 014 7.75zm11.774 3.537a.75.75 0 00-1.048-1.074L10.7 14.145 9.281 12.72a.75.75 0 00-1.062 1.058l1.943 1.95a.75.75 0 001.055.008l4.557-4.45z"></path></svg>
+    <strong>Tip: </strong>If you’re looking for a walkthrough of the code above, make sure you read the 2 part series on implementing a deep neural network from scratch! I would especially focus on the second part. Here are the links: <a href="https://muttoni.github.io/blog/machine-learning/2020/12/28/Implementing-a-Deep-Neural-Network-from-Scratch-Part-1.html">Part 1</a>, <a href="https://muttoni.github.io/blog/machine-learning/2021/01/01/Implementing-a-Deep-Neural-Network-from-Scratch-Part-2.html">Part 2</a>.
+</div>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id=" Requirements">
+<a class="anchor" href="#%C2%A0Requirements" aria-hidden="true"><span class="octicon octicon-link"></span></a> Requirements<a class="anchor-link" href="#%C2%A0Requirements"> </a>
+</h2>
+<p>Now that our code and model is setup, we need to recap what we need to add to our DeepClassifier in order to properly support a <code>lr_finder</code> method.</p>
+<p><strong>Our goal</strong>: a method called <code>lr_finder</code> that when called performs a round of training (aka fitting) for a predetermined number of epochs, starting with a very small learning rate, increasing it exponentially every minibatch (why exponentially? So that we have an equal representation of small learning rate values vs large ones -- more on this later). We can sort out specifics later. 
+</p>
+<div class="flash flash-error">
+    <svg class="octicon octicon-alert" viewbox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M8.22 1.754a.25.25 0 00-.44 0L1.698 13.132a.25.25 0 00.22.368h12.164a.25.25 0 00.22-.368L8.22 1.754zm-1.763-.707c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575L6.457 1.047zM9 11a1 1 0 11-2 0 1 1 0 012 0zm-.25-5.25a.75.75 0 00-1.5 0v2.5a.75.75 0 001.5 0v-2.5z"></path></svg>
+    <strong>Warning: </strong>The <code>lr_finder</code> can’t start with random parameters, it should start with the current parameter state of the model, <em>without affecting it</em> during training! So we’ll need to <strong>clone</strong> our parameters.
+</div>
+<p>We'll also need to update our code to keep track of training loss at every minibatch (across epochs), and store the respective learning rates used for each minibatch.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now, before we continue, I want to make a big <strong>disclaimer</strong>: the additions we'll make today are going to be "patches" added on to a codebase that is, to put it lightly, fragile. The code above was created for demonstration purposes only, and essentially contains the bare essentials to make a deep neural network classifier work properly. The sole use of this code, for me, is to tinker with it and try out ideas and concepts as I come across them.</p>
+<p>While I'm tempted to re-write everything from scratch and build it into a more modular/generalized framework, it would introduce abstractions that for the purposes of our learning process would make "getting" the concepts more difficult, as effective abstractions inevitably hide away the lower level workings of a piece of code.</p>
+<p>So I apologize for the entropy that we are about to introduce into this already "entropic" code. We might look into making it more robust in a future post. In the meantime, you are more than welcome to take this and refactor it to your liking!</p>
+<p>With the disclaimer out of the way, let's recap how we normally used this DeepClassifier. We would instantiate the class and pass in the desired layers. Like so:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">my_nn</span> <span class="o">=</span> <span class="n">DeepClassifier</span><span class="p">(</span>   <span class="c1"># example usage</span>
+  <span class="n">LinearModel</span><span class="p">(</span><span class="mi">28</span><span class="o">*</span><span class="mi">28</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="c1"># a layer with 28*28 inputs (pixels), 20 activations</span>
+  <span class="n">LinearModel</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>     <span class="c1"># a layer with 20 inputs and 10 activations/outputs</span>
+<span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Each layer contains the input and output parameter counts. Every layer's autput is ReLU'd automatically, except for the last one that uses Cross-Entropy Loss based on log and softmax. Read <a href="https://muttoni.github.io/blog/machine-learning/2021/01/01/Implementing-a-Deep-Neural-Network-from-Scratch-Part-2.html">Part 2</a> of the DNN from scratch series to see exactly how this works.</p>
+<p>We then call the fit method and pass in the data, the learning rate and the epochs to train for:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">my_nn</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">train_dl</span><span class="o">=</span><span class="n">train_dl</span><span class="p">,</span> 
+    <span class="n">valid_dl</span><span class="o">=</span><span class="n">valid_dl</span><span class="p">,</span>
+    <span class="n">lr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">epochs</span><span class="o">=</span><span class="mi">100</span>
+<span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p></p>
+<div class="flash">
+    <svg class="octicon octicon-info octicon octicon-info" viewbox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"></path></svg>
+    <strong>Note: </strong>Note the limitations here: the learning rate is fixed--the very purpose of a learning rate finder is that it helps us map the effect of a <em>range</em> of learning rates. Furthermore, the data is linked with the <code>fit</code> method, meaning that if we don’t call <code>.fit</code>, we won’t have any data inside our classifier. 
+</div>
+<p>So we must change our code to allow for data to be fed in at the instantiation stage of the DeepClassifier class. We'll also need to move some of the properties that we used to create in our <code>fit</code> method, at the instantiation step. First however, let's tweak our dependencies LinearModel and SGD_Optimizer.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id=" SGD_Optimizer">
+<a class="anchor" href="#%C2%A0SGD_Optimizer" aria-hidden="true"><span class="octicon octicon-link"></span></a> SGD_Optimizer<a class="anchor-link" href="#%C2%A0SGD_Optimizer"> </a>
+</h3>
+<p>Given our learning rate needs to change over the course of each batch, we'll first need to be able to pass in a custom learning rate to our SGD optimizer's <code>step</code> method (where the updates are multiplied by the learning rate, as seen above). In our original code, the learning rate was set on instantiation and never touched again. We'll change it so the <code>step</code> method accepts a keyworded argument called <code>lr</code>, otherwise it defaults to its parameter <code>self.lr</code>.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">SGD_Optimizer</span><span class="p">:</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">lr</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lr</span> <span class="o">=</span> <span class="n">lr</span> 
+  
+  <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>        <span class="c1"># add **kawrgs</span>
+    <span class="n">lr</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'lr'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">)</span> <span class="c1"># get 'lr' if set, otherwise set to self.lr</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">data</span> <span class="o">-=</span> <span class="n">p</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">data</span> <span class="o">*</span> <span class="n">lr</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">grad</span> <span class="o">=</span> <span class="kc">None</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="LinearModel">
+<a class="anchor" href="#LinearModel" aria-hidden="true"><span class="octicon octicon-link"></span></a>LinearModel<a class="anchor-link" href="#LinearModel"> </a>
+</h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In our <code>LinearModel</code> we need to introduce some changes. We need two new methods that our <code>lr_finder</code> can use to copy and set parameters so as not to overwrite the actual model parameters. We'll introduce two new methods: <code>copy_parameters</code> (note the <code>parameters</code> method already acts as a <code>get</code>), and a <code>set_parameters</code>. These are quite self-explanatory and the only tricky thing is to make sure to clone and detach any copies from the gradient calculations, as well as reset gradient tracking when setting the parameters. See the code below:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<details class="description" open="">
+      <summary class="btn btn-sm" data-open="Hide Code" data-close="Show Code"></summary>
+        <p></p>
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># General purpose Linear Model</span>
+<span class="k">class</span> <span class="nc">LinearModel</span><span class="p">:</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">inputs</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span> <span class="o">=</span> <span class="n">outputs</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_params</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span>
+
+  <span class="k">def</span> <span class="nf">copy_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">set_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">parameters</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="nd">@self</span><span class="o">.</span><span class="n">weights</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span>
+
+  <span class="k">def</span> <span class="nf">_init_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_size</span><span class="p">))</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
+    <span class="n">bias</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_size</span><span class="p">))</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">weights</span><span class="p">,</span> <span class="n">bias</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+    </details>
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="DeepClassifier">
+<a class="anchor" href="#DeepClassifier" aria-hidden="true"><span class="octicon octicon-link"></span></a>DeepClassifier<a class="anchor-link" href="#DeepClassifier"> </a>
+</h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Prep-Work">
+<a class="anchor" href="#Prep-Work" aria-hidden="true"><span class="octicon octicon-link"></span></a>Prep Work<a class="anchor-link" href="#Prep-Work"> </a>
+</h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we can proceed with updating DeepClassifier. We'll start by by changing our <code>__init__</code> method as follows:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span>  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">layers</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span> <span class="c1"># added **kwargs</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="n">layers</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">accuracy_scores</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">training_losses</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Moved all of the following from the 'fit' method</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">optimizers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">epoch_losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'train_dl'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">valid_dl</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'valid_dl'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lr</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'lr'</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">last_layer_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+
+    <span class="c1"># We'll use this Boolean to determine whether to save</span>
+    <span class="c1"># the individual batch losses in a list, instead of </span>
+    <span class="c1"># averaging them at every epoch. We need to do this </span>
+    <span class="c1"># as we'll need to plot them against each learning rate.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">save_batch_losses</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># if save_batch_losses is True, we save them here </span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">batch_losses</span> <span class="o">=</span> <span class="p">[]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We essentially moved a bunch of stuff from the <code>fit</code> method to the <code>__init__</code> method so as to be able to access them from our upcoming lr_finder method. You can read the code above to see what changed.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The backward method will need to accept an optional <code>lr</code> and pass it on to the step method of our optimizers. This allows us to feed in a dynamic learning rate. at each step function, which is exactly what we need.</p>
+<p>We also have a <code>self.save_batch_losses</code> that flags whether our individual batch losses (that usually get aggregated and averaged per epoch) should be persisted at batch granularity in <code>self.batch_losses</code>. This is necessary with the lr_finder because we need to plot individual batch losses with individual learning rates that changed every batch.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span>  <span class="k">def</span> <span class="nf">_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">yb</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">lr</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'lr'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loss_function</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">yb</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_batch_losses</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">batch_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">epoch_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizers</span><span class="p">:</span> <span class="n">opt</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Implementing-lr_finder()">
+<a class="anchor" href="#Implementing-lr_finder()" aria-hidden="true"><span class="octicon octicon-link"></span></a>Implementing lr_finder()<a class="anchor-link" href="#Implementing-lr_finder()"> </a>
+</h3>
+<p>Believe it or not, those are all the changes we need to make lr_finder work! Now we are to implement the new method. Here it is in all its glory, and we'll go line by line.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<details class="description" open="">
+      <summary class="btn btn-sm" data-open="Hide Code" data-close="Show Code"></summary>
+        <p></p>
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span>  <span class="k">def</span> <span class="nf">lr_finder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">base_lr</span> <span class="o">=</span> <span class="mf">1e-6</span>
+    <span class="n">max_lr</span> <span class="o">=</span> <span class="mf">1e+1</span>
+    <span class="n">epochs</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">current_lr</span> <span class="o">=</span> <span class="n">base_lr</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">old_params</span> <span class="o">=</span> <span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">copy_parameters</span><span class="p">()</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">batch_losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lr_finder_lrs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">save_batch_losses</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span><span class="o">.</span><span class="n">bs</span>
+    <span class="n">samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="n">iters</span> <span class="o">=</span> <span class="n">epochs</span> <span class="o">*</span> <span class="nb">round</span><span class="p">(</span><span class="n">samples</span> <span class="o">/</span> <span class="n">batch_size</span><span class="p">)</span>
+    <span class="n">step_size</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">max_lr</span><span class="o">/</span><span class="n">base_lr</span><span class="p">)</span> <span class="o">/</span> <span class="n">iters</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">iters</span><span class="p">,</span> <span class="n">step_size</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SGD_Optimizer</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">base_lr</span><span class="p">))</span>
+
+    <span class="k">while</span> <span class="n">current_lr</span> <span class="o">&lt;=</span> <span class="n">max_lr</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">current_lr</span> <span class="o">&gt;</span> <span class="n">max_lr</span><span class="p">:</span>
+          <span class="k">break</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">(</span><span class="n">xb</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backward</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">yb</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="n">current_lr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr_finder_lrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_lr</span><span class="p">)</span>
+        <span class="n">current_lr</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">e</span><span class="o">**</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">current_lr</span><span class="p">)</span><span class="o">+</span><span class="n">step_size</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># clean up</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">save_batch_losses</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">optimizers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">old_params</span><span class="p">)):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">old_params</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+    </details>
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Let's look at the code in detail:</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<div class="highlight"><pre><span></span><span class="n">base_lr</span> <span class="o">=</span> <span class="mf">1e-7</span>
+    <span class="n">max_lr</span> <span class="o">=</span> <span class="mf">1e+1</span>
+    <span class="n">epochs</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">current_lr</span> <span class="o">=</span> <span class="n">base_lr</span>
+</pre></div>
+<p>Our brand new lr_finder method accepts a <code>base_lr</code> learning rate to start the range of experimentation. It will stop when it reaches <code>max_lr</code>. <code>epochs</code> is an arbitrary number that we set to determine how many epochs to run the finder for. We also set a <code>current_lr</code> to the minimum lr we want to test and this variable will be incremented at every step. The first three parameters are critical as they determine how many steps will be carried out, as the steps are determined by batch size, total sample size and epochs, like so:</p>
+<div class="highlight"><pre><span></span><span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span><span class="o">.</span><span class="n">bs</span>
+    <span class="n">samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="n">iters</span> <span class="o">=</span> <span class="n">epochs</span> <span class="o">*</span> <span class="nb">round</span><span class="p">(</span><span class="n">samples</span> <span class="o">/</span> <span class="n">batch_size</span><span class="p">)</span>
+    <span class="n">step_size</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">max_lr</span><span class="o">/</span><span class="n">base_lr</span><span class="p">)</span> <span class="o">/</span> <span class="n">iters</span><span class="p">)</span>
+</pre></div>
+<p>In my particular implementation, the step size <code>step_size</code> is determined by the range of learning rates to try out, divided by the iterations the model will go through (number of epochs multiplied by the number of batches in our sample).</p>
+<p>Now you may wonder why we are dividing the maximum learning rate by the minimum learning rate, instead of subtracting. The reason is: logs! Since we are dealing with logs, rather than do: $\frac{max\_lr - min\_lr}{iters}$, we do: $\frac{log(\frac{max\_lr}{min\_lr})}{iters}$. Rather than divide the learning rates linearly, which, when plotted on log scale, has the effect of condensing the majority of the learning rates towards the higher end, I opted to increment our step size exponentially. To do this we need to take the log so that we deal with exponents and can later increment the next learning rate by $e^{current\_lr+step\_size}$. This will ensure that when we plot our learning rates on a log scale, our iterations will be evenly spaced out.</p>
+<div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">old_params</span> <span class="o">=</span> <span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">copy_parameters</span><span class="p">()</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lr_finder_lrs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">save_batch_losses</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+<p>Next we save the old parameters so we can reset our model later. We create a list to store our learning rates and set the flag <code>save_batch_losses</code> to True, so that our _backward function knows to save them in our <code>batch_losses</code> list. The two lists <code>lr_finder_lrs</code> and <code>batch_losses</code> are the two lists that we will plot!</p>
+<div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SGD_Optimizer</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">base_lr</span><span class="p">))</span>
+
+    <span class="k">while</span> <span class="n">current_lr</span> <span class="o">&lt;=</span> <span class="n">max_lr</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">current_lr</span> <span class="o">&gt;</span> <span class="n">max_lr</span><span class="p">:</span>
+          <span class="k">break</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">(</span><span class="n">xb</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backward</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">yb</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="n">current_lr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr_finder_lrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_lr</span><span class="p">)</span>
+        <span class="n">current_lr</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">e</span><span class="o">**</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">current_lr</span><span class="p">)</span><span class="o">+</span><span class="n">step_size</span><span class="p">)</span>
+</pre></div>
+<p>Next we proceed as if we were a <code>fit</code> method, by initiating optimizers for each layer and going through our training cycle. As you can see, the loop is a little different, where we don't worry about epochs, we just check that the <code>current_lr</code> is less than or equal to the <code>max_lr</code>. We then go through each batch, apply <code>_forward</code>, then apply <code>_backward</code> and then make sure to save our current learning rate and update the learning rate for the next batch. Since our step_size is exponent-based (i.e. we logged it at the beginning, giving us the exponent of $e$ that will give us that value), we need to increment the exponent of $e$ by that step size. We do this by taking the log of our current learning rate and incrementing that by the step_size which is already logarithmic.</p>
+<p>The formula is as follows:
+$ current\_lr = e^{log(current\_lr) + step\_size}$</p>
+<p>Once our training rounds are complete, the last thing left to do is cleanup!</p>
+<div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">save_batch_losses</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">optimizers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">old_params</span><span class="p">)):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">old_params</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+</pre></div>
+<p>We reset our flag <code>save_batch_losses</code>, reset our optimizers and copy back the saved parameters into the model. Again, the reason we want to save the parameters is so that we can apply the lr_finder at any stage of our fitting cycles without it affecting our parameter state.</p>
+<p>Here is the updated DeepClassifier code:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<details class="description" open="">
+      <summary class="btn btn-sm" data-open="Hide Code" data-close="Show Code"></summary>
+        <p></p>
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">DeepClassifier</span><span class="p">:</span>
+  <span class="sd">"""</span>
+<span class="sd">  A multi-layer Neural Network using ReLU activations and SGD</span>
+<span class="sd">  params: layers to use (LinearModels)</span>
+<span class="sd">  methods: </span>
+<span class="sd">    - fit(train_dl, valid_dl, epochs, lr)</span>
+<span class="sd">    - predict(image_tensor)</span>
+<span class="sd">    - lr_finder()</span>
+<span class="sd">  """</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">layers</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="n">layers</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">accuracy_scores</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">training_losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">optimizers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">epoch_losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">batch_losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'train_dl'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">valid_dl</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'valid_dl'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">last_layer_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">save_batch_losses</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lr</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+  <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'train_dl'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">valid_dl</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'valid_dl'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_dl</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'epochs'</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lr</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'lr'</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'verbose'</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">optimizers</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SGD_Optimizer</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span><span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">epochs</span><span class="p">):</span>
+      <span class="k">for</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span><span class="p">:</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">(</span><span class="n">xb</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backward</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">yb</span><span class="p">)</span>
+  
+      <span class="bp">self</span><span class="o">.</span><span class="n">_validate_epoch</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_tensor</span><span class="p">):</span>
+    <span class="n">probabilities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">(</span><span class="n">image_tensor</span><span class="p">)</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">prediction</span> <span class="o">=</span> <span class="n">probabilities</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">prediction</span><span class="p">,</span> <span class="n">probabilities</span>
+
+  <span class="k">def</span> <span class="nf">lr_finder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">base_lr</span> <span class="o">=</span> <span class="mf">1e-6</span>
+    <span class="n">max_lr</span> <span class="o">=</span> <span class="mf">1e+1</span>
+    <span class="n">epochs</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">current_lr</span> <span class="o">=</span> <span class="n">base_lr</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">old_params</span> <span class="o">=</span> <span class="p">[</span><span class="n">layer</span><span class="o">.</span><span class="n">copy_parameters</span><span class="p">()</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lr_finder_lrs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">save_batch_losses</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span><span class="o">.</span><span class="n">bs</span>
+    <span class="n">samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="n">iters</span> <span class="o">=</span> <span class="n">epochs</span> <span class="o">*</span> <span class="nb">round</span><span class="p">(</span><span class="n">samples</span> <span class="o">/</span> <span class="n">batch_size</span><span class="p">)</span>
+    <span class="n">step_size</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">max_lr</span><span class="o">/</span><span class="n">base_lr</span><span class="p">)</span> <span class="o">/</span> <span class="n">iters</span><span class="p">)</span>
+   
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SGD_Optimizer</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">base_lr</span><span class="p">))</span>
+
+    <span class="k">while</span> <span class="n">current_lr</span> <span class="o">&lt;=</span> <span class="n">max_lr</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_dl</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">current_lr</span> <span class="o">&gt;</span> <span class="n">max_lr</span><span class="p">:</span>
+          <span class="k">break</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">(</span><span class="n">xb</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backward</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">yb</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="n">current_lr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr_finder_lrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_lr</span><span class="p">)</span>
+        <span class="n">current_lr</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">e</span><span class="o">**</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">current_lr</span><span class="p">)</span><span class="o">+</span><span class="n">step_size</span><span class="p">)</span>
+
+    <span class="c1"># clean up</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">save_batch_losses</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">optimizers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">old_params</span><span class="p">)):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">old_params</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+  <span class="k">def</span> <span class="nf">_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xb</span><span class="p">):</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">xb</span>
+    <span class="k">for</span> <span class="n">layer_idx</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">layer_idx</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_layer_index</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ReLU</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+  <span class="k">def</span> <span class="nf">_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">yb</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">lr</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'lr'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loss_function</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">yb</span><span class="p">)</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_batch_losses</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">batch_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">epoch_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizers</span><span class="p">:</span> <span class="n">opt</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_batch_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span><span class="p">):</span>
+    <span class="n">predictions</span> <span class="o">=</span> <span class="n">xb</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">max_indices</span> <span class="o">=</span> <span class="n">xb</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">corrects</span> <span class="o">=</span> <span class="n">max_indices</span> <span class="o">==</span> <span class="n">yb</span> 
+    <span class="k">return</span> <span class="n">corrects</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> 
+
+  <span class="k">def</span> <span class="nf">_validate_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+    <span class="n">accs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_batch_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">(</span><span class="n">xb</span><span class="p">),</span> <span class="n">yb</span><span class="p">)</span> <span class="k">for</span> <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_dl</span><span class="p">]</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">accs</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">accuracy_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
+    <span class="n">epoch_loss</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">epoch_losses</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">epoch_losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">training_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">epoch_loss</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Epoch #</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="s1">'Loss:'</span><span class="p">,</span> <span class="n">epoch_loss</span><span class="p">,</span> <span class="s1">'Accuracy:'</span><span class="p">,</span> <span class="n">score</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_loss_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+    <span class="n">log_sm_preds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">predictions</span><span class="p">))</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="o">-</span><span class="n">log_sm_preds</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">targets</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">results</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_ReLU</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.0</span><span class="p">))</span>
+
+  <span class="k">def</span> <span class="nf">_print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+      <span class="nb">print</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+    </details>
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id=" Demo">
+<a class="anchor" href="#%C2%A0Demo" aria-hidden="true"><span class="octicon octicon-link"></span></a> Demo<a class="anchor-link" href="#%C2%A0Demo"> </a>
+</h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now let's try it out! We instantiate a new <code>DeepClassifier</code> by specifying the layers and passing in the data so we can run our <code>lr_finder</code> before running <code>fit</code> (where in our old code we would normally feed in our dataset).</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">my_nn</span> <span class="o">=</span> <span class="n">DeepClassifier</span><span class="p">(</span>
+  <span class="n">LinearModel</span><span class="p">(</span><span class="mi">28</span><span class="o">*</span><span class="mi">28</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>
+  <span class="n">LinearModel</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+  <span class="n">train_dl</span><span class="o">=</span><span class="n">dl</span><span class="p">,</span>
+  <span class="n">valid_dl</span><span class="o">=</span><span class="n">valid_dl</span>
+<span class="p">)</span>
+
+<span class="n">my_nn</span><span class="o">.</span><span class="n">lr_finder</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now let's create a quick function to plot the results (this can easily be turned into a method as well, but beyond the scope of this post:</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">plot_lr_loss</span><span class="p">(</span><span class="n">my_nn</span><span class="p">):</span>
+  <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+  <span class="n">x</span> <span class="o">=</span> <span class="n">my_nn</span><span class="o">.</span><span class="n">lr_finder_lrs</span>
+  <span class="n">y</span> <span class="o">=</span> <span class="n">my_nn</span><span class="o">.</span><span class="n">batch_losses</span>
+
+  <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+
+  <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s1">'g-'</span><span class="p">)</span>
+
+  <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">'Learning Rates'</span><span class="p">)</span>
+  <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">'Training Loss'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'g'</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Results with lr=</span><span class="si">{</span><span class="n">my_nn</span><span class="o">.</span><span class="n">lr</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">'log'</span><span class="p">)</span>
+  <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plot_lr_loss</span><span class="p">(</span><span class="n">my_nn</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_png output_subarea ">
+<img src="data:image/png;base64,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%0A">
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Analyzing-the-lr_finder-plot">
+<a class="anchor" href="#Analyzing-the-lr_finder-plot" aria-hidden="true"><span class="octicon octicon-link"></span></a>Analyzing the lr_finder plot<a class="anchor-link" href="#Analyzing-the-lr_finder-plot"> </a>
+</h2>
+<p>As rules of thumb, fastai recommends picking the LR where the slope is steepest, or pick the end of the slop minimum and divide it by 10. In our case it seems our point of steepest slope is between $10^{-3}$ and $10^{-2}$. We definitely don't want to pick anything beyond 5e-1 as it seems the loss is flattening before picking up again. We also probably don't want to pick anything before $10^{-4}$ as the loss stays flat meaning it would take a lot of epochs before we see any significant improvement. If I were to pick a learning rate I would probably go with $10^{-2}$ for the first couple cycles, and then move to a finer one (e.g. $10^{-3}$).</p>
+<h2 id="Conclusion">
+<a class="anchor" href="#Conclusion" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conclusion<a class="anchor-link" href="#Conclusion"> </a>
+</h2>
+<p>Learning rates are a critical part of training a neural network using SGD and a good learning rate will not only help you get closest to the minimum loss, but will also speed up your training (i.e. less epochs to reach a specific accuracy).</p>
+<p>Experiment with lr_finder yourself! Suggestions: try adding weights to our step_size increments (e.g. *2) and try incrementing it linearly instead of logarithmically and see how it affects the plot.</p>
+<p>If you have suggestions for what to implement next, comment below! Hope you found this useful and all the best in your machine learning journey.</p>
+<p><strong>References</strong></p>
+<p></p>
+<div class="footnotes"><p id="fn-1">1. Leslie N. Smith. (v6 2017, v1 2015). Cyclical Learning Rates for Training Neural Networks <a href="https://arxiv.org/abs/1506.01186">Link</a><a href="#fnref-1" class="footnote footnotes">↩</a></p></div>
+
+</div>
+</div>
+</div>
+</div>
+
+
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="muttoni/blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/blog/machine-learning/2021/01/08/Implementing-a-Learning-Rate-Finder-from-Scratch.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>A personal blog focused on machine learning, music and everything inbetween.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/muttoni" title="muttoni"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://www.linkedin.com/in/muttoni" title="muttoni"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#linkedin"></use></svg></a></li><li><a rel="me" href="https://twitter.com/muttonia" title="muttonia"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
