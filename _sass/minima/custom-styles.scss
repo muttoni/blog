@@ -8,6 +8,10 @@
 // If you want to turn off dark background for syntax highlighting, comment or delete the below line.
 @import "minima/fastpages-dracula-highlight"; 
 
+.home > p {
+    font-size: 18px; 
+}
+
 pre, code {
     background-color:transparent;
     border:none;
