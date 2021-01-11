@@ -484,7 +484,9 @@ p code { font-size: 19px; }
 
 .Box .post-link { font-size: 22px; }
 
-pre, code { background-color: transparent; border: none; }
+.flash { font-size: 16px; }
+
+pre, code { background-color: #efefef; border: none; }
 
 .input_area pre { padding-top: 8px !important; padding-bottom: 8px !important; border-left: none; }
 
