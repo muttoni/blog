@@ -8,20 +8,28 @@
 // If you want to turn off dark background for syntax highlighting, comment or delete the below line.
 @import "minima/fastpages-dracula-highlight"; 
 
+// more consistent font-size on the homepage
 .home > p {
     font-size: 18px; 
 }
 
+// consistent border-radius with .Box
 .Box .image-preview {
     border-radius:4px;
 }
 
+// more consistent font-size
 .Box .post-link {
     font-size:22px;
 }
 
+.flash {
+    font-size:16px;
+}
+
+// better code & output formatting
 pre, code {
-    background-color:transparent;
+    background-color:#efefef;
     border:none;
 }
 
@@ -51,7 +59,7 @@ tt, code {
     font-weight: 500;
 }
 
-
+// fix bug that shows doctype of svg from graphviz
 .output_svg.output_subarea.output_execute_result {
     color:transparent;
 }
