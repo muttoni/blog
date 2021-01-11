@@ -486,7 +486,11 @@ p code { font-size: 19px; }
 
 .flash { font-size: 16px; }
 
+.flash code { background-color: transparent; font-size: 16px !important; }
+
 pre, code { background-color: #efefef; border: none; }
+
+.output pre { background-color: transparent; }
 
 .input_area pre { padding-top: 8px !important; padding-bottom: 8px !important; border-left: none; }
 

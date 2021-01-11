@@ -184,7 +184,7 @@ window.onload = wrap_img;
 <a class="anchor" href="#Introduction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Introduction<a class="anchor-link" href="#Introduction"> </a>
 </h2>
 <p>In this post we will implement a <strong>learning rate finder</strong> from scratch. A learning rate finder helps us find sensible learning rates for our models to train with, including minimum and maximum values to use in a <strong>cyclical learning rate</strong> policy. Both concepts were invented by Leslie Smith and I suggest you check out his <a href="https://arxiv.org/pdf/1506.01186.pdf">paper</a><sup id="fnref-1" class="footnote-ref"><a href="#fn-1">1</a></sup>!</p>
-<p>We'll implement the learning rate finder (and cyclical learning rates in a future post) into our Deep Neural Network created from scratch in the 2-part series <a href="https://muttoni.github.io/blog/machine-learning/2020/12/28/Implementing-a-Deep-Neural-Network-from-Scratch-Part-1.html">Implementing a Deep Neural Network from Scratch</a>. Check that out first if you haven't read it already!</p>
+<p>We'll implement the learning rate finder (and cyclical learning rates in a future post) into our Deep Neural Network created from scratch in the 2-part series <a href="/blog/machine-learning/2020/12/28/Implementing-a-Deep-Neural-Network-from-Scratch-Part-1.html">Implementing a Deep Neural Network from Scratch</a>. Check that out first if you haven't read it already!</p>
 
 </div>
 </div>
@@ -196,7 +196,7 @@ window.onload = wrap_img;
 <a class="anchor" href="#Understanding-the-Learning-Rate" aria-hidden="true"><span class="octicon octicon-link"></span></a>Understanding the Learning Rate<a class="anchor-link" href="#Understanding-the-Learning-Rate"> </a>
 </h2>
 <p>Before we start, what <em>is</em> the learning rate? The learning rate is just a value we multiply our gradients by in Stochastic Gradient Descent before updating our parameters with those values. Think of it like a "weight" that reduces the impact of each step change so as to ensure we are not over-shooting our loss function. If you imagine our loss function like a parabola, and our parameters starting somehwere along the parabola, descending along by a specific amount will bring us further "down" in the parabola, to it's minimum point eventually. If the step amount is too big however, we risk overshooting that minimum point. That's where the learning rate comes into play: it helps us achieve very small steps if desired.</p>
-<p>To refresh your memory, here is what happens in the optimization step of Stochastic Gradient Descent (<a href="https://muttoni.github.io/blog/machine-learning/2020/12/28/Implementing-a-Deep-Neural-Network-from-Scratch-Part-1.html">Part 1</a> of our DNN series explains this formula in more detail, so read that first):</p>
+<p>To refresh your memory, here is what happens in the optimization step of Stochastic Gradient Descent (<a href="/blog/machine-learning/2020/12/28/Implementing-a-Deep-Neural-Network-from-Scratch-Part-1.html">Part 1</a> of our DNN series explains this formula in more detail, so read that first):</p>
 <p>$ w := w - \eta \nabla Q({w}) $</p>
 <p>Our parameter $w$ is updated by subtracting its gradient calculated with respect to the loss function $\nabla Q({w})$ after multiplying it by a weighing factor $\eta$. That weighing factor $\eta$ is our learning rate!</p>
 <p>It's even easier in code:</p>
@@ -204,7 +204,7 @@ window.onload = wrap_img;
 <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">data</span> <span class="o">-=</span> <span class="n">p</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">data</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr</span>
 </pre></div>
 <p>This is outlined in the <code>.step</code> method of our optimizer (check the setup code in the next section).
-As we saw towards the end of <a href="https://muttoni.github.io/blog/machine-learning/2021/01/01/Implementing-a-Deep-Neural-Network-from-Scratch-Part-2.html">Part 2</a> of our Implementing a Deep Neural Network from Scratch series, the learning rate has a <em>big</em> impact on training for our model: the lower the learning rate, the more epochs required to reach a given accuracy, the higher the learning rate, the higher risk of overshooting (or never reaching) the minimum loss. There's a lot more factors at play that we cover in that series, but for now let's just consider the learning rate.</p>
+As we saw towards the end of <a href="/blog/machine-learning/2021/01/01/Implementing-a-Deep-Neural-Network-from-Scratch-Part-2.html">Part 2</a> of our Implementing a Deep Neural Network from Scratch series, the learning rate has a <em>big</em> impact on training for our model: the lower the learning rate, the more epochs required to reach a given accuracy, the higher the learning rate, the higher risk of overshooting (or never reaching) the minimum loss. There's a lot more factors at play that we cover in that series, but for now let's just consider the learning rate.</p>
 <p>Another aspect of learning rates is that a single value is rarely optimal for the duration of the training. We could say that its efficacy <strong>degrades over time</strong> (time measured in batches/epochs). That's why common techniques include decreasing the learning rate by a step-wise fixed amount or by an exponentially decreasing amount during the course of the training. The logic being that as the model is further into training and is approaching the minimum loss, it needs less pronounced updates (steps), and therefore would benefit from smaller increments.</p>
 <h2 id="The-Learning-Rate-Finder">
 <a class="anchor" href="#The-Learning-Rate-Finder" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Learning Rate Finder<a class="anchor-link" href="#The-Learning-Rate-Finder"> </a>
@@ -488,11 +488,7 @@ is enormously valuable whenever you are facing a new architecture or dataset.<su
 <div class="cell border-box-sizing text_cell rendered">
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p></p>
-<div class="flash flash-success">
-    <svg class="octicon octicon-checklist octicon octicon-checklist octicon octicon-checklist" viewbox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M2.5 1.75a.25.25 0 01.25-.25h8.5a.25.25 0 01.25.25v7.736a.75.75 0 101.5 0V1.75A1.75 1.75 0 0011.25 0h-8.5A1.75 1.75 0 001 1.75v11.5c0 .966.784 1.75 1.75 1.75h3.17a.75.75 0 000-1.5H2.75a.25.25 0 01-.25-.25V1.75zM4.75 4a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5h-4.5zM4 7.75A.75.75 0 014.75 7h2a.75.75 0 010 1.5h-2A.75.75 0 014 7.75zm11.774 3.537a.75.75 0 00-1.048-1.074L10.7 14.145 9.281 12.72a.75.75 0 00-1.062 1.058l1.943 1.95a.75.75 0 001.055.008l4.557-4.45z"></path></svg>
-    <strong>Tip: </strong>If you’re looking for a walkthrough of the code above, make sure you read the 2 part series on implementing a deep neural network from scratch! I would especially focus on the second part. Here are the links: <a href="https://muttoni.github.io/blog/machine-learning/2020/12/28/Implementing-a-Deep-Neural-Network-from-Scratch-Part-1.html">Part 1</a>, <a href="https://muttoni.github.io/blog/machine-learning/2021/01/01/Implementing-a-Deep-Neural-Network-from-Scratch-Part-2.html">Part 2</a>.
-</div>
+<p><strong>Note</strong>: If you're looking for a walkthrough of the code above, make sure you read the 2 part series on implementing a deep neural network from scratch! I would especially focus on the second part. Here are the links: <a href="/blog/machine-learning/2020/12/28/Implementing-a-Deep-Neural-Network-from-Scratch-Part-1.html">Part 1</a>, <a href="/blog/machine-learning/2021/01/01/Implementing-a-Deep-Neural-Network-from-Scratch-Part-2.html">Part 2</a>.</p>
 
 </div>
 </div>
@@ -549,7 +545,7 @@ is enormously valuable whenever you are facing a new architecture or dataset.<su
 <div class="cell border-box-sizing text_cell rendered">
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Each layer contains the input and output parameter counts. Every layer's autput is ReLU'd automatically, except for the last one that uses Cross-Entropy Loss based on log and softmax. Read <a href="https://muttoni.github.io/blog/machine-learning/2021/01/01/Implementing-a-Deep-Neural-Network-from-Scratch-Part-2.html">Part 2</a> of the DNN from scratch series to see exactly how this works.</p>
+<p>Each layer contains the input and output parameter counts. Every layer's autput is ReLU'd automatically, except for the last one that uses Cross-Entropy Loss based on log and softmax. Read <a href="/blog/machine-learning/2021/01/01/Implementing-a-Deep-Neural-Network-from-Scratch-Part-2.html">Part 2</a> of the DNN from scratch series to see exactly how this works.</p>
 <p>We then call the fit method and pass in the data, the learning rate and the epochs to train for:</p>
 
 </div>
@@ -583,7 +579,7 @@ is enormously valuable whenever you are facing a new architecture or dataset.<su
 <p></p>
 <div class="flash">
     <svg class="octicon octicon-info octicon octicon-info" viewbox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"></path></svg>
-    <strong>Note: </strong>Note the limitations here: the learning rate is fixed--the very purpose of a learning rate finder is that it helps us map the effect of a <em>range</em> of learning rates. Furthermore, the data is linked with the <code>fit</code> method, meaning that if we don’t call <code>.fit</code>, we won’t have any data inside our classifier. 
+    <strong>Note: </strong>Note the limitations here: the learning rate is fixed--the very purpose of a learning rate finder is that it helps us map the effect of a <em>range</em> of learning rates. Furthermore, the data is linked with the <code>fit</code> method, meaning that if we don’t call <code>.fit</code>, we won’t have any data inside our classifier.
 </div>
 <p>So we must change our code to allow for data to be fed in at the instantiation stage of the DeepClassifier class. We'll also need to move some of the properties that we used to create in our <code>fit</code> method, at the instantiation step. First however, let's tweak our dependencies LinearModel and SGD_Optimizer.</p>
 
