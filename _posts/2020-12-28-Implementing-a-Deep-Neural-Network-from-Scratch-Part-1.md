@@ -1857,8 +1857,8 @@ Epoch #49 0.8005
 <li>our model is also quite "rigid" in the sense that it's only built for MNIST. We'll generalize it into a general Linear Model, that accepts any number of labels in a much more elegant way!</li>
 <li>Lastly, a neural network is non-linear. How do we break this linearity and make our model orders of magnitude more powerful?</li>
 </ul>
-<p>All of this coming up in <strong><a href="https://muttoni.github.io/blog/machine-learning/2021/01/01/Implementing-a-Deep-Neural-Network-from-Scratch-Part-2.html">Part 2</a></strong>!</p>
-
+<p>All of this coming up in <strong><a href="{% post_url 2021-01-01-Implementing-a-Deep-Neural-Network-from-Scratch-Part-2 %}">Part 2</a></strong>!</p>
+<h2 id="Part-2"><a href="{% post_url 2021-01-01-Implementing-a-Deep-Neural-Network-from-Scratch-Part-2 %}">Part 2</a><a class="anchor-link" href="#Part-2"> </a></h2>
 </div>
 </div>
 </div>
