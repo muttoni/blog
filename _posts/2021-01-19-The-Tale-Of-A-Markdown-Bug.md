@@ -76,3 +76,9 @@ A-ha! Those numbers are decimal charcodes. I'll give you a hint: 32 is the decim
 ## Conclusions
 
 Adventurers, please be wary of the insidiousness of the evil non-breaking space. It will strike when you least expect it. Oh, and I made Markdown Lint aware of the [issue](https://github.com/DavidAnson/markdownlint/issues/367), so hopefully it won't happen to you.
+
+There's only one latent question: how did that non-breaking space get there in the first place? Good question. If I find out, I'll update this post. If you find out, please reach out on Twitter at [muttonia@](twitter.com/muttonia)! Current suspects are:
+
+- having copied and pasted the file from a non-markdown format (i.e. an untitled VSCode file, into a new .md file.)
+- fastpages altering the contents in its (first) rendering pass if the post is not properly formatted with a header block at the beginning.
+- me being an idiot
