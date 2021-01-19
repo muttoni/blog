@@ -71,9 +71,9 @@ I had never heard of special hashtag characters, and the linebreaks I had tried 
 
 ![]({{ site.baseurl }}/images/md-charcodeat.png)
 
-A-ha! Those numbers are decimal charcodes. I'll give you a hint: 32 is the decimal charcode for a regular space. Can you guess what 160 is? If you're a webdev keep it to yourself, don't spoil it for the others! Charcode 160, aka `&nbsp;` in HTML, is called a **non-breaking space**. Essentially identical to a normal space in every single way, including it's unique ability to go undetected in Markdown Lint, except it's a _completely different character_. It's usually used when you don't want a trailing space or the space between two HTML tags to be automatically ignored. Ironic that it was ignored by both the markdown parser and the markdown linter. 
+A-ha! Those numbers are decimal charcodes. I'll give you a hint: 32 is the decimal charcode for a regular space. Can you guess what 160 is? If you're a webdev keep it to yourself, don't spoil it for the others! Charcode 160, aka `&nbsp;` in HTML, is called a **non-breaking space**. Essentially identical to a normal space in every single way, including it's unique ability to go undetected in Markdown Lint, except it's a _completely different character_. It's usually used when you don't want a trailing space or the space between two HTML tags to be automatically ignored. Ironic that it was ignored by both the markdown parser and the markdown linter.
 
-Spaces are quite a rabbit hole. After a little research I found out there are at least 19 types of spaces. 
+Spaces are quite a rabbit hole. After a little research I found out there are at least 19 types of spaces.
 
 ```
 U+0009 Horizontal tab (HT)
@@ -101,7 +101,7 @@ Granted, it's unlikely they will ever insidiously occupy your markdown documents
 
 ## Conclusions
 
-Adventurers, please be wary of the insidiousness of the evil non-breaking space. It will strike when you least expect it. Oh, and I made Markdown Lint aware of the [issue](https://github.com/DavidAnson/markdownlint/issues/367), so hopefully it won't happen to you. 
+Adventurers, please be wary of the insidiousness of the evil non-breaking space. It will strike when you least expect it. Oh, and I made Markdown Lint aware of the [issue](https://github.com/DavidAnson/markdownlint/issues/367), so hopefully it won't happen to you.
 
 There's only one latent question: how did that non-breaking space get there in the first place? Good question. If I find out, I'll update this post. If you find out, please reach out on Twitter at [muttonia@](https://twitter.com/muttonia)! Current suspects are:
 
@@ -115,10 +115,10 @@ Turns out I _was_ an idiot. With an Italian keyboard layout, the `#` hashtag cha
 
 ![]({{ site.baseurl }}/images/eurkey.png "A typical it-IT keyboard layout, original from Wikimedia")
 
-It also turns out, that `Alt Gr` followed by the `space` key generates a **non-breaking space** (note: if this is common knowledge, I will bow my head in silence and sacrifice my `Caps Lock` key to the typing gods). Can you guess what happened?
+It also turns out, that `Alt Gr` followed by the `space` key generates a **non-breaking space** (note: if this is common knowledge, I will bow my head in silence and sacrifice my `Caps Lock` key to the typing gods).
 
-When typing quickly, after inserting hashtags for the heading, my thumbs were too quick to add a space before the `Alt Gr` key had time to fully unpress, causing a non-breaking space to sneak in the heading. I told you those damn spaces are sneaky. 
+Can you guess what happened? When typing quickly, after inserting hashtags for the heading, my thumbs were too quick to press space before the `Alt Gr` key had time to fully unpress, causing a non-breaking space to sneak in the heading. Since the spaces look identical, there was no visual queue on VSCode or Markdown Lint that a problematic character had sneaked in. I told you those damn spaces are insidious.
 
-So I guess the ultimate Occam's Razor axiom is: if something goes wrong, it's probably your own damn fault. I've asked Wikipedia to update their definition:
+So I guess the ultimate Occam's Razor axiom is: if something goes wrong, it's probably your own damn fault. I've since asked Wikipedia to update their definition:
 
 > Occam's razor, or law of parsimony is the problem-solving principle that "entities should not be multiplied without necessity", or more simply, **the simplest explanation is that you messed up**. - _Wikipedia, and me_
