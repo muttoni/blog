@@ -5,7 +5,7 @@ layout: notebook
 description: A summary of how to deal with real-time data in AWS. We will cover the Amazon Kinesis service offering including Data Streams, Firehose, Video Streams and Data Analytics.
 categories: [machine-learning, aws]
 keywords: machine learning, ml, aws, amazon web services, kinesis, kinesis data streams, kinesis fire hose, kinesis video streams, kinesis data analytics, realtime data streaming
-title: AWS for Machine Learning Part 1 - Streaming Real-Time Data with Kinesis
+title: AWS for Machine Learning Notes Part 1 - Streaming Real-Time Data with Kinesis
 image: images/aws/kinesis-architecture.png
 ---
 
@@ -81,6 +81,7 @@ Examples of when to use Kinesis Data Streams:
 - Process and evaluate logs immediately
 - Run real-time analytics on clickstream data and process it within seconds
 - Feed data directly into a ML model
+- Real world example: [Zillow](https://aws.amazon.com/solutions/case-studies/zillow-zestimate/) uses it to collect public record data and MLS listings and update home value estimates in real-time.
 
 ## Kinesis Data Firehose
 
@@ -98,8 +99,6 @@ Examples of when to use Kinesis Firehose:
 - Processing is optional
 - Final destination is S3 or other data store
 - Data retention is not important
-
-Real world example: [Zillow](https://aws.amazon.com/solutions/case-studies/zillow-zestimate/) uses it to collect public record data and MLS listings and update home value estimates in real-time.
 
 ## Kinesis Video Streams
 
