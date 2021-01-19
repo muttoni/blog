@@ -2,7 +2,7 @@
 toc: false
 badges: false
 layout: post
-description: Headings or subheadings randomly not working in markdown? There's a reason, and here's how to fix it. In this post I recount an evil markdown bug that took me way too much time to fix.
+description: Headings or subheadings randomly not rendering in markdown? Read on. In this post I recount an insidious markdown bug that took me way too much time to fix.
 categories: [misc]
 keywords: markdown, headings not working, subheadings not working, markdown subheadings bug, non-breaking space, nbsp, md
 title: The Tale of a Markdown Bug
@@ -109,7 +109,7 @@ There's only one latent question: how did that non-breaking space get there in t
 - fastpages altering the contents in its (first) rendering pass if the post is not properly formatted with a header block at the beginning.
 - me being an idiot
 
-## Edit: Mystery Solved!
+## Edit: Mystery Solved
 
 Turns out I _was_ an idiot. With an Italian keyboard layout, the `#` hashtag character is created by pressing the `Alt Gr` modifier key followed by the `à` key.
 
