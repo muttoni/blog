@@ -71,11 +71,37 @@ I had never heard of special hashtag characters, and the linebreaks I had tried 
 
 ![]({{ site.baseurl }}/images/md-charcodeat.png)
 
-A-ha! Those numbers are decimal charcodes. I'll give you a hint: 32 is the decimal charcode for a regular space. Can you guess what 160 is? If you're a webdev keep it to yourself, don't spoil it for the others! Charcode 160, aka `&nbsp;` in HTML, is called a **non-breaking space**. Essentially identical to a normal space in every single way, including it's unique ability to go undetected in Markdown Lint, except it's a _completely different character_. It's usually used when you don't want a trailing space or the space between two HTML tags to be automatically ignored. Ironic that it was ignored by both the markdown parser and the markdown linter.
+A-ha! Those numbers are decimal charcodes. I'll give you a hint: 32 is the decimal charcode for a regular space. Can you guess what 160 is? If you're a webdev keep it to yourself, don't spoil it for the others! Charcode 160, aka `&nbsp;` in HTML, is called a **non-breaking space**. Essentially identical to a normal space in every single way, including it's unique ability to go undetected in Markdown Lint, except it's a _completely different character_. It's usually used when you don't want a trailing space or the space between two HTML tags to be automatically ignored. Ironic that it was ignored by both the markdown parser and the markdown linter. 
+
+Spaces are quite a rabbit hole. After a little research I found out there are at least 19 types of spaces. 
+
+```
+U+0009 Horizontal tab (HT)
+U+0020 Space
+U+00A0 Non-break space
+U+1680 Ogham space mark
+U+180E Mongolian vowel separator
+U+2000 En quad
+U+2001 Em quad
+U+2002 En space
+U+2003 Em space
+U+2004 Three-per-em space
+U+2005 Four-per-em space
+U+2006 Six-per-em space
+U+2007 Figure space
+U+2008 Punctuation space
+U+2009 Thin space
+U+200A Hair space
+U+202F Narrow no-break space
+U+205F Medium mathematical space
+U+3000 Ideographic space
+```
+
+Granted, it's unlikely they will ever insidiously occupy your markdown documents, never trust an innocent looking space!
 
 ## Conclusions
 
-Adventurers, please be wary of the insidiousness of the evil non-breaking space. It will strike when you least expect it. Oh, and I made Markdown Lint aware of the [issue](https://github.com/DavidAnson/markdownlint/issues/367), so hopefully it won't happen to you.
+Adventurers, please be wary of the insidiousness of the evil non-breaking space. It will strike when you least expect it. Oh, and I made Markdown Lint aware of the [issue](https://github.com/DavidAnson/markdownlint/issues/367), so hopefully it won't happen to you. 
 
 There's only one latent question: how did that non-breaking space get there in the first place? Good question. If I find out, I'll update this post. If you find out, please reach out on Twitter at [muttonia@](https://twitter.com/muttonia)! Current suspects are:
 
