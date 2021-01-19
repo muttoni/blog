@@ -108,3 +108,15 @@ There's only one latent question: how did that non-breaking space get there in t
 - having copied and pasted the file from a non-markdown format (i.e. an untitled VSCode file, into a new .md file.)
 - fastpages altering the contents in its (first) rendering pass if the post is not properly formatted with a header block at the beginning.
 - me being an idiot
+
+## Edit: Mystery Solved!
+
+Turns out I _was_ an idiot. With a European (Italian in my case) keyboard layout, the `#` hashtag character is created by pressing the `Alt Gr` modifier key followed by the `à` key. 
+
+It also turns out, that `Alt Gr` followed by the `space` key generates a **non-breaking space** (note: if this is common knowledge, I will bow my head in silence and sacrifice my `Caps Lock` key to the typing gods). Can you guess what happened?
+
+When typing quickly, after inserting hashtags for the heading, my thumbs were too quick to add a space before the `Alt Gr` key had time to fully unpress, causing a non-breaking space to sneak in the heading. I told you those damn spaces are sneaky. 
+
+So I guess the ultimate Occam's Razor axiom is: if something goes wrong, it's probably your own damn fault. Here's a better alternative:
+
+> Occam's razor, or law of parsimony is the problem-solving principle that "entities should not be multiplied without necessity", or more simply, **the simplest explanation is that you messed up**. - _Wikipedia, and me_
