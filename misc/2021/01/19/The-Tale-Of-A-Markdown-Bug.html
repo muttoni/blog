@@ -110,7 +110,7 @@ window.onload = wrap_img;
        • <span class="read-time" title="Estimated read time">
     
     
-      4 min read
+      5 min read
     
 </span></p>
 
@@ -192,6 +192,31 @@ window.onload = wrap_img;
 <p><img src="/blog/images/md-charcodeat.png" alt="" /></p>
 
 <p>A-ha! Those numbers are decimal charcodes. I’ll give you a hint: 32 is the decimal charcode for a regular space. Can you guess what 160 is? If you’re a webdev keep it to yourself, don’t spoil it for the others! Charcode 160, aka <code class="language-plaintext highlighter-rouge">&amp;nbsp;</code> in HTML, is called a <strong>non-breaking space</strong>. Essentially identical to a normal space in every single way, including it’s unique ability to go undetected in Markdown Lint, except it’s a <em>completely different character</em>. It’s usually used when you don’t want a trailing space or the space between two HTML tags to be automatically ignored. Ironic that it was ignored by both the markdown parser and the markdown linter.</p>
+
+<p>Spaces are quite a rabbit hole. After a little research I found out there are at least 19 types of spaces.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>U+0009 Horizontal tab (HT)
+U+0020 Space
+U+00A0 Non-break space
+U+1680 Ogham space mark
+U+180E Mongolian vowel separator
+U+2000 En quad
+U+2001 Em quad
+U+2002 En space
+U+2003 Em space
+U+2004 Three-per-em space
+U+2005 Four-per-em space
+U+2006 Six-per-em space
+U+2007 Figure space
+U+2008 Punctuation space
+U+2009 Thin space
+U+200A Hair space
+U+202F Narrow no-break space
+U+205F Medium mathematical space
+U+3000 Ideographic space
+</code></pre></div></div>
+
+<p>Granted, it’s unlikely they will ever insidiously occupy your markdown documents, never trust an innocent looking space!</p>
 
 <p>## Conclusions</p>
 
