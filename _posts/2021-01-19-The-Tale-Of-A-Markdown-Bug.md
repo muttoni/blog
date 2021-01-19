@@ -37,7 +37,7 @@ What the heck?!
 
 ## Blaming Fastpages
 
-Now for some context: my blog is currently powered by [fastpages](github.com/fastai/fastpages),  an opinionated customization layer on top of Jekyll that allows for quick publishing of Jupyter notebooks and markdown files hosted on github.io with a slightly tweaked minima interface. Chances are you're still looking at it right now.
+Now for some context: my blog is currently powered by [fastpages](https://github.com/fastai/fastpages),  an opinionated customization layer on top of Jekyll that allows for quick publishing of Jupyter notebooks and markdown files hosted on github.io with a slightly tweaked minima interface. Chances are you're still looking at it right now.
 
 Given the recent launch of fastpages, I suspected there was a bug in the markdown rendering pipeline, mainly due to the fact that my post made heavy use of lists and tables, potentially causing some parsing conflicts. So I tried fiddling with the text itself, trying to see if I could get around the parsing bug. I tried adding text before/after the heading, removing earlier parts of the post to see if a strange character in a code block was causing butterfly effects in the parsing several paragraphs down... nothing!
 
@@ -77,7 +77,7 @@ A-ha! Those numbers are decimal charcodes. I'll give you a hint: 32 is the decim
 
 Adventurers, please be wary of the insidiousness of the evil non-breaking space. It will strike when you least expect it. Oh, and I made Markdown Lint aware of the [issue](https://github.com/DavidAnson/markdownlint/issues/367), so hopefully it won't happen to you.
 
-There's only one latent question: how did that non-breaking space get there in the first place? Good question. If I find out, I'll update this post. If you find out, please reach out on Twitter at [muttonia@](twitter.com/muttonia)! Current suspects are:
+There's only one latent question: how did that non-breaking space get there in the first place? Good question. If I find out, I'll update this post. If you find out, please reach out on Twitter at [muttonia@](https://twitter.com/muttonia)! Current suspects are:
 
 - having copied and pasted the file from a non-markdown format (i.e. an untitled VSCode file, into a new .md file.)
 - fastpages altering the contents in its (first) rendering pass if the post is not properly formatted with a header block at the beginning.
