@@ -113,7 +113,7 @@ There's only one latent question: how did that non-breaking space get there in t
 
 Turns out I _was_ an idiot. With an Italian keyboard layout, the `#` hashtag character is created by pressing the `Alt Gr` modifier key followed by the `à` key.
 
-![]({{ site.baseurl }}/images/eurkey.png "A typical EU keyboard layout, original from Wikimedia")
+![]({{ site.baseurl }}/images/eurkey.png "A typical it-IT keyboard layout, original from Wikimedia")
 
 It also turns out, that `Alt Gr` followed by the `space` key generates a **non-breaking space** (note: if this is common knowledge, I will bow my head in silence and sacrifice my `Caps Lock` key to the typing gods). Can you guess what happened?
 
