@@ -9,9 +9,9 @@ title: The Tale of a Markdown Bug
 image: images/md-preview.png
 ---
 
-Ok this happened -- I was writing an blog post and was making liberal use of subheadings, as one does when explaining a topic in a structured way. Upon saving and previewing the post some headings simply did not render. I tried reloading multiple times, editing the spacing, ensuring there was 1 space between the hashtags and the words, anything I could think of. Here's what the issue looked like:
+Ok this happened -- I was typing a blog post using markdown in VSCode and was making liberal use of subheadings, as one does when explaining a topic in a structured way. Upon saving and previewing the post some headings simply did not render. I tried reloading multiple times, editing the spacing, ensuring there was 1 space between the hashtags and the words, anything I could think of. Here's what the issue looked like...
 
-Here's the markdown:
+The markdown:
 
 ```markdown
 ---
@@ -23,7 +23,7 @@ Here's the markdown:
 ---
 ```
 
-And here is the output:
+And the output:
 
 ---
 
