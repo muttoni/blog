@@ -114,7 +114,7 @@ Examples of when to use Kinesis Video Streams:
 - Feed streaming data into other AWS services
 - Ex: Amazon cloud cam -> KVS to EC2 -> identifies person -> sends notification (Lambda) & stores image (S3)
 
-## Kinesis Video Analytics
+## Kinesis Video Analytics
 
 - Continuously read and process data in real-time from KDS or KDF
 - Run real time SQL queries (rename columns, joins, etc)
