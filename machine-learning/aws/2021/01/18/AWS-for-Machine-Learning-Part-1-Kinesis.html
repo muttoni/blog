@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>AWS for Machine Learning Part 1 - Streaming Real-Time Data with Kinesis | Andrea Muttoni</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="AWS for Machine Learning Part 1 - Streaming Real-Time Data with Kinesis" />
+<meta name="author" content="Andrea Muttoni" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A summary of how to deal with real-time data in AWS. We will cover the Amazon Kinesis service offering including Data Streams, Firehose, Video Streams and Data Analytics." />
+<meta property="og:description" content="A summary of how to deal with real-time data in AWS. We will cover the Amazon Kinesis service offering including Data Streams, Firehose, Video Streams and Data Analytics." />
+<link rel="canonical" href="https://muttoni.github.io/blog/machine-learning/aws/2021/01/18/AWS-for-Machine-Learning-Part-1-Kinesis.html" />
+<meta property="og:url" content="https://muttoni.github.io/blog/machine-learning/aws/2021/01/18/AWS-for-Machine-Learning-Part-1-Kinesis.html" />
+<meta property="og:site_name" content="Andrea Muttoni" />
+<meta property="og:image" content="https://muttoni.github.io/blog/images/aws/kinesis-architecture.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-01-18T00:00:00-06:00" />
+<script type="application/ld+json">
+{"url":"https://muttoni.github.io/blog/machine-learning/aws/2021/01/18/AWS-for-Machine-Learning-Part-1-Kinesis.html","@type":"BlogPosting","headline":"AWS for Machine Learning Part 1 - Streaming Real-Time Data with Kinesis","dateModified":"2021-01-18T00:00:00-06:00","datePublished":"2021-01-18T00:00:00-06:00","image":"https://muttoni.github.io/blog/images/aws/kinesis-architecture.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://muttoni.github.io/blog/machine-learning/aws/2021/01/18/AWS-for-Machine-Learning-Part-1-Kinesis.html"},"author":{"@type":"Person","name":"Andrea Muttoni"},"description":"A summary of how to deal with real-time data in AWS. We will cover the Amazon Kinesis service offering including Data Streams, Firehose, Video Streams and Data Analytics.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://muttoni.github.io/blog/feed.xml" title="Andrea Muttoni" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BLM1GZKCEL"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-BLM1GZKCEL');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">Andrea Muttoni</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">AWS for Machine Learning Part 1 - Streaming Real-Time Data with Kinesis</h1><p class="page-description">A summary of how to deal with real-time data in AWS. We will cover the Amazon Kinesis service offering including Data Streams, Firehose, Video Streams and Data Analytics.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-01-18T00:00:00-06:00" itemprop="datePublished">
+        Jan 18, 2021
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      5 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#machine-learning">machine-learning</a>
+        &nbsp;
+      
+        <a class="category-tags-link" href="/blog/categories/#aws">aws</a>
+        
+      
+      </p>
+    
+
+    
+      </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Over the next several months I will cover various AWS services in the context of Machine Learning. The goal is to summarize the main components and tools in a concise way (e.g. cliff notes), as well as show some hands-on examples. The main reason for doing this is I’m studying for the AWS Certified Machine Learning Specialty Exam. In this first part, we will look at the start of any machine learning adventure: the data! In particular, how to deal with live, streaming data.</p>
+
+<h2 id="amazon-kinesis">Amazon Kinesis</h2>
+
+<p>We live in a world where data is constantly being generated, and often the value of that data diminishes rapidly with time. Think of use-cases such as needing to react to financial indicators within milliseconds, aggregating clickstream data to optimize a user’s journey on a website or creating real time dashboards to monitor server cluster performance of an MMORPG.</p>
+
+<p>It’s important therefore to be able to gather, process, evaluate (and sometimes store) that data quickly. Amazon Kinesis is a family of services that offers this functionality. It is made up of 4 main components:</p>
+
+<ul>
+  <li>Kinesis Data Streams (KDS)</li>
+  <li>Kinesis Data Firehose (KDF)</li>
+  <li>Kinesis Video Streams (KVS)</li>
+  <li>Kinesis Data Analytics (KDA)</li>
+</ul>
+
+<p>Let’s look at each individually.</p>
+
+<h3 id="kinesis-data-streams">Kinesis Data Streams</h3>
+
+<p>Kinesis (Data) Streams is a service that allows us to process data in real-time. It’s <strong>fast</strong>–once collected it’s able to offload it to a data consumer application (e.g. S3, Lambda, etc) within 70 milliseconds! That’s (literally) faster than a <a href="https://en.wikipedia.org/wiki/Blinking">blink</a> of an eye! Try blinking right now. It takes humans 100-400 ms to blink. So assuming a low-end average time of 150ms, in the time it took you to blink, Kinesis did what it needed to do in <strong>half the time</strong>. Ok I’m getting off topic.</p>
+
+<p>Let’s look at the general structure of how Kinesis Streams are structured.</p>
+
+<p><img src="/blog/images/aws/kinesis-architecture.png" alt="" title="Source: docs.aws.amazon.com" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># A more concise way to look at the above:
+</span><span class="n">Data</span> <span class="n">Producers</span> 
+    <span class="o">-&gt;</span> <span class="n">Kinesis</span> <span class="n">Streams</span> <span class="p">(</span><span class="n">Shards</span><span class="p">)</span> 
+        <span class="o">-&gt;</span> <span class="n">Data</span> <span class="n">Consumers</span> <span class="p">(</span><span class="n">EC2</span><span class="p">,</span> <span class="n">Lambda</span><span class="p">,</span> <span class="n">KDA</span><span class="p">,</span> <span class="n">EMR</span><span class="p">)</span> 
+            <span class="o">-&gt;</span> <span class="p">[</span><span class="n">Optional</span><span class="p">]</span> <span class="n">Storage</span><span class="p">,</span> <span class="n">Analysis</span> <span class="p">(</span><span class="n">S3</span><span class="p">,</span> <span class="n">Dynamo</span><span class="p">,</span> <span class="n">Redshift</span><span class="p">...)</span>
+</code></pre></div></div>
+
+<p>A typical Kinesis Data Streams application reads data from a data stream as data records. A data stream is <strong>a group of data records</strong>. Data records are grouped and distributed in shards (see below). Storing data is OPTIONAL with default retention being 24h, extendable to 7 days. Recommended when some action needs to be performed on the data.</p>
+
+<h3 id="shards">Shards</h3>
+
+<p>A shard is a collection of data that is sequenced. Using the train example from acloud.guru: if we were to compare a data stream to a train line with trains traveling thousands of miles per millisecond:</p>
+
+<ul>
+  <li>each train is a shard, with its own partition key</li>
+  <li>each car of the train is a data record, with its own sequence number</li>
+  <li>the passengers in each car are the bytes that make up the data blob. Each car can fit up to 1MB of data.</li>
+</ul>
+
+<p>Useful facts:</p>
+
+<ul>
+  <li>Each shard consists of a sequence of data records. Shards can ingest 1000 records / sec, and support 5 read transactions per second.</li>
+  <li>Total bandwidth is therefore</li>
+  <li>A data record is the single unit of data (composed of seq number, partition key and blob, up to 1MB)</li>
+  <li>Transient data store: retention period 24h (default) to 7 days</li>
+  <li>Re-sharding is possible by monitoring producers and consumers via an API call</li>
+</ul>
+
+<h3 id="kinesis-producer-library-kpl">Kinesis Producer Library (KPL)</h3>
+
+<ul>
+  <li>Library to use Kinesis Data Streams and stream data</li>
+  <li>automatic and configurable retry mechanism</li>
+  <li>processing delay due to higher packing efficiencies / better performance</li>
+  <li>Java Wrapper</li>
+</ul>
+
+<h3 id="kinesis-client-library-kcl">Kinesis Client Library (KCL)</h3>
+
+<ul>
+  <li>Library to consume streams</li>
+</ul>
+
+<h3 id="kinesis-api-via-the-aws-sdk">Kinesis API (via the AWS SDK)</h3>
+
+<ul>
+  <li>low level operations and manual configs of the two above</li>
+  <li>everything is manually handled (PutRecords, GetRecords)</li>
+  <li>no delays in processing</li>
+  <li>any AWS SDK (any language, not just Java)</li>
+</ul>
+
+<p>Examples of when to use Kinesis Data Streams:</p>
+
+<ul>
+  <li>Process and evaluate logs immediately</li>
+  <li>Run real-time analytics on clickstream data and process it within seconds</li>
+  <li>Feed data directly into a ML model</li>
+</ul>
+
+<h2 id="kinesis-data-firehose">Kinesis Data Firehose</h2>
+
+<ul>
+  <li>Delivery service for streaming data</li>
+  <li>Can support processing tools via Lambda</li>
+  <li>Supports Redshift, S3, Splunk</li>
+  <li>Supports events (e.g. S3 events to publish to dynamo)</li>
+  <li>Kinesis Data Streams as shards and has data retention vs</li>
+  <li>Firehose doesn’t have Shards, and storage is primary objective</li>
+</ul>
+
+<p>Examples of when to use Kinesis Firehose:</p>
+
+<ul>
+  <li>Easily collect streaming data from IoT devices, embedded systems, etc</li>
+  <li>Run ETL jobs on streaming data</li>
+  <li>Processing is optional</li>
+  <li>Final destination is S3 or other data store</li>
+  <li>Data retention is not important</li>
+</ul>
+
+<p>Real world example: <a href="https://aws.amazon.com/solutions/case-studies/zillow-zestimate/">Zillow</a> uses it to collect public record data and MLS listings and update home value estimates in real-time.</p>
+
+<h2 id="kinesis-video-streams">Kinesis Video Streams</h2>
+
+<ul>
+  <li>stream video and images in real time (from security cameras, audio feeds, radar data, etc)</li>
+  <li>Continuous and Batch consumers (e.g. EC2) via fragments and frames a.k.a. KVS applications</li>
+  <li>Can be stored after or before processing</li>
+</ul>
+
+<p>Examples of when to use Kinesis Video Streams:</p>
+
+<ul>
+  <li>Real time streaming video data</li>
+  <li>Batch process and store streaming video</li>
+  <li>Feed streaming data into other AWS services</li>
+  <li>Ex: Amazon cloud cam -&gt; KVS to EC2 -&gt; identifies person -&gt; sends notification (Lambda) &amp; stores image (S3)</li>
+</ul>
+
+<p>## Kinesis Video Analytics</p>
+
+<ul>
+  <li>Continuously read and process data in real-time from KDS or KDF</li>
+  <li>Run real time SQL queries (rename columns, joins, etc)</li>
+  <li>Store in S3, Redshift, other BI tools</li>
+</ul>
+
+<p>Examples of when to use KDA:</p>
+
+<ul>
+  <li>Run real-time SQL queries on streaming data</li>
+  <li>construct apps that provide insight into data</li>
+  <li>create metrics, dashboards, monitoring, notifs, alarms</li>
+  <li>output query results into S3 or other datasources</li>
+  <li>stream ETL jobs</li>
+</ul>
+
+<h2 id="examples">Examples</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left"><strong>Objective</strong></th>
+      <th style="text-align: left"><strong>Kinesis service to use</strong></th>
+      <th style="text-align: left"><strong>Why</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Stream Apache log files directly from several EC2 instances and store them into Redshift</td>
+      <td style="text-align: left">Kinesis Data Firehose</td>
+      <td style="text-align: left">Kinesis Data Analytics for preprocessing -&gt; Redshift. KDF is for storing streamed data to a final destination. First data is stored to S3 then moved to RS</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Stream live video coverage of a sporting event to distribute to customers in near real time</td>
+      <td style="text-align: left">Kinesis Video Stream</td>
+      <td style="text-align: left">Process video data and feed into other AWS services (e.g. Streaming EC2 instance or S3 or CloudFront)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Transform real-time streaming data and immediately feed into a custom ML application</td>
+      <td style="text-align: left">Kinesis Data Stream</td>
+      <td style="text-align: left">Storing is optional, our primary goal is immediate consumption, transform it and feed it into an ML model</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Query real-time data, create metric graphs and store output into S3</td>
+      <td style="text-align: left">Kinesis Streams via Kinesis Data Analytics</td>
+      <td style="text-align: left">KDA supports running SQL queries on streaming data and then store or feed the output to other services (e.g. S3)</td>
+    </tr>
+  </tbody>
+</table>
+
+
+  </div><a class="u-url" href="/blog/machine-learning/aws/2021/01/18/AWS-for-Machine-Learning-Part-1-Kinesis.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+    <data class="u-url" href="/blog/"></data>
+    
+    <div class="wrapper">
+        <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/muttoni" title="muttoni"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://www.linkedin.com/in/muttoni" title="muttoni"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#linkedin"></use></svg></a></li><li><a rel="me" href="https://twitter.com/muttonia" title="muttonia"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+        <div class="footer-col-wrapper">
+            <div class="footer-col">
+                <p class="feed-subscribe"  style="text-align:center;">
+                    <a href="/blog/feed.xml">
+                        <svg class="svg-icon orange">
+                            <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+                        </svg><span>Subscribe</span>
+                    </a>
+                </p>
+            </div>
+        </div>
+        
+    </div>
+    
+</footer></body>
+
+</html>

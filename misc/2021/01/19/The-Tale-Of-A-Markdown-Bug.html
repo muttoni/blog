@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>The Tale of a Markdown Bug | Andrea Muttoni</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="The Tale of a Markdown Bug" />
+<meta name="author" content="Andrea Muttoni" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Headings or subheadings randomly not working in markdown? There’s a reason, and here’s how to fix it. In this post I recount an evil markdown bug that took way too much time to fix." />
+<meta property="og:description" content="Headings or subheadings randomly not working in markdown? There’s a reason, and here’s how to fix it. In this post I recount an evil markdown bug that took way too much time to fix." />
+<link rel="canonical" href="https://muttoni.github.io/blog/misc/2021/01/19/The-Tale-Of-A-Markdown-Bug.html" />
+<meta property="og:url" content="https://muttoni.github.io/blog/misc/2021/01/19/The-Tale-Of-A-Markdown-Bug.html" />
+<meta property="og:site_name" content="Andrea Muttoni" />
+<meta property="og:image" content="https://muttoni.github.io/blog/images/md-preview.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-01-19T00:00:00-06:00" />
+<script type="application/ld+json">
+{"url":"https://muttoni.github.io/blog/misc/2021/01/19/The-Tale-Of-A-Markdown-Bug.html","@type":"BlogPosting","headline":"The Tale of a Markdown Bug","dateModified":"2021-01-19T00:00:00-06:00","datePublished":"2021-01-19T00:00:00-06:00","image":"https://muttoni.github.io/blog/images/md-preview.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://muttoni.github.io/blog/misc/2021/01/19/The-Tale-Of-A-Markdown-Bug.html"},"author":{"@type":"Person","name":"Andrea Muttoni"},"description":"Headings or subheadings randomly not working in markdown? There’s a reason, and here’s how to fix it. In this post I recount an evil markdown bug that took way too much time to fix.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://muttoni.github.io/blog/feed.xml" title="Andrea Muttoni" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BLM1GZKCEL"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-BLM1GZKCEL');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">Andrea Muttoni</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">The Tale of a Markdown Bug</h1><p class="page-description">Headings or subheadings randomly not working in markdown? There's a reason, and here's how to fix it. In this post I recount an evil markdown bug that took way too much time to fix.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-01-19T00:00:00-06:00" itemprop="datePublished">
+        Jan 19, 2021
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      4 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#misc">misc</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Ok this happened – I was writing an blog post and was making liberal use of subheadings, as one does when explaining a topic in a structured way. Upon saving and previewing the post some headings simply did not render. I tried reloading multiple times, editing the spacing, ensuring there was 1 space between the hashtags and the words, anything I could think of. Here’s what the issue looked like:</p>
+
+<p>Here’s the markdown:</p>
+
+<div class="language-markdown highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">---</span>
+
+<span class="c1">## Subheading that doesn't work</span>
+
+<span class="c1">## Subheading that works</span>
+
+<span class="nn">---</span>
+</code></pre></div></div>
+
+<p>And here is the output:</p>
+
+<hr />
+
+<p>## Subheading that doesn’t work</p>
+
+<h2 id="subheading-that-works">Subheading that works</h2>
+
+<hr />
+
+<p>What the heck?!</p>
+
+<h2 id="blaming-fastpages">Blaming Fastpages</h2>
+
+<p>Now for some context: my blog is currently powered by <a href="github.com/fastai/fastpages">fastpages</a>,  an opinionated customization layer on top of Jekyll that allows for quick publishing of Jupyter notebooks and markdown files hosted on github.io with a slightly tweaked minima interface. Chances are you’re still looking at it right now.</p>
+
+<p>Given the recent launch of fastpages, I suspected there was a bug in the markdown rendering pipeline, mainly due to the fact that my post made heavy use of lists and tables, potentially causing some parsing conflicts. So I tried fiddling with the text itself, trying to see if I could get around the parsing bug. I tried adding text before/after the heading, removing earlier parts of the post to see if a strange character in a code block was causing butterfly effects in the parsing several paragraphs down… nothing!</p>
+
+<h2 id="establishing-a-ground-truth">Establishing a Ground Truth</h2>
+
+<p>To check whether fastpages was the culprit, I then searched for a couple online markdown previewers as well as VSCodes own markdown previewer tab. Suprise suprise…the markdown text above didn’t work there either. Here’s an example:</p>
+
+<p><img src="/blog/images/md-code.png" alt="" title="The markdown input" /></p>
+
+<p><img src="/blog/images/md-preview.png" alt="" title="The previewed output" /></p>
+
+<p>So I downloaded a VSCode extension called Markdown Lint to check whether I had made a noobish mistake. The linter identified several issues such as extra line breaks where there shouldn’t have been, trailing spaces, missing line breaks before a list, etc. But that heading seems perfectly A-OK for the linter!</p>
+
+<p><img src="/blog/images/md-linter.png" alt="" title="Are you sure about that Markdown Lint?" /></p>
+
+<p><strong>Ok, something’s up.</strong></p>
+
+<h2 id="occams-razor">Occam’s Razor</h2>
+
+<p>It’s in situations like these, Occam’s Razor always comes to mind:</p>
+
+<blockquote>
+  <p>Occam’s razor, or law of parsimony is the problem-solving principle that “entities should not be multiplied without necessity”, or more simply, <strong>the simplest explanation is usually the right one</strong>. - <em>Wikipedia</em></p>
+</blockquote>
+
+<p>There was something I hadn’t tried. I had only cut, copied, pasted, adjusted, changed the title, moved the title around…but I had never actually tried to delete it and write it from scratch. A moment of deep calm surrounds me and I hit the backspace character until the whole heading disappears–and I delete the line break for good measure. I press enter again and type a new heading. It works. Damn you Occam! But why? Well, Occam again: if there’s a problem with the heading…the problem is probably with the heading, not everywhere else. So I start dissecting the heading and evalute possibilities:</p>
+
+<ul>
+  <li>The line break is a weird unix/windows mix that is causing conflicts</li>
+  <li>The hashtags are special character versions</li>
+  <li>The space inbetween the hashtags and the heading text is a special character</li>
+</ul>
+
+<p>I had never heard of special hashtag characters, and the linebreaks I had tried to add and remove multiple times, so I ruled them out. This leaves us with our space character. Now the internet is full of demonstrations of how to leverage form vulnerabilities, perform XSS injections and in general mess with software with weird spaces. So I copied the spaces from a heading that worked, and the heading that didn’t work and fired up the old Javascript console. Like a surgeon, I took out my scalpel of choice, that I lovingly called <code class="language-plaintext highlighter-rouge">String.prototype.charCodeAt()</code>, and got to work.</p>
+
+<p><img src="/blog/images/md-charcodeat.png" alt="" /></p>
+
+<p>A-ha! Those numbers are decimal charcodes. I’ll give you a hint: 32 is the decimal charcode for a regular space. Can you guess what 160 is? If you’re a webdev keep it to yourself, don’t spoil it for the others! Charcode 160, aka <code class="language-plaintext highlighter-rouge">&amp;nbsp;</code> in HTML, is called a <strong>non-breaking space</strong>. Essentially identical to a normal space in every single way, including it’s unique ability to go undetected in Markdown Lint, except it’s a <em>completely different character</em>. It’s usually used when you don’t want a trailing space or the space between two HTML tags to be automatically ignored. Ironic that it was ignored by both the markdown parser and the markdown linter.</p>
+
+<p>## Conclusions</p>
+
+<p>Adventurers, please be wary of the insidiousness of the evil non-breaking space. It will strike when you least expect it. Oh, and I made Markdown Lint aware of the <a href="https://github.com/DavidAnson/markdownlint/issues/367">issue</a>, so hopefully it won’t happen to you.</p>
+
+  </div><a class="u-url" href="/blog/misc/2021/01/19/The-Tale-Of-A-Markdown-Bug.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+    <data class="u-url" href="/blog/"></data>
+    
+    <div class="wrapper">
+        <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/muttoni" title="muttoni"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://www.linkedin.com/in/muttoni" title="muttoni"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#linkedin"></use></svg></a></li><li><a rel="me" href="https://twitter.com/muttonia" title="muttonia"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+        <div class="footer-col-wrapper">
+            <div class="footer-col">
+                <p class="feed-subscribe"  style="text-align:center;">
+                    <a href="/blog/feed.xml">
+                        <svg class="svg-icon orange">
+                            <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+                        </svg><span>Subscribe</span>
+                    </a>
+                </p>
+            </div>
+        </div>
+        
+    </div>
+    
+</footer></body>
+
+</html>
