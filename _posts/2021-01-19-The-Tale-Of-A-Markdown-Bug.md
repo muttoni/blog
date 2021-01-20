@@ -2,7 +2,7 @@
 toc: false
 badges: false
 layout: post
-description: Headings or subheadings randomly not rendering in markdown? Read on. In this post I recount an insidious markdown bug that took me much time to track down.
+description: Headings or subheadings randomly not rendering in markdown? In this post I recount an insidious markdown bug that took me much way too long to track down.
 categories: [misc]
 keywords: markdown, headings not working, subheadings not working, markdown subheadings bug, non-breaking space, nbsp, md
 title: The Tale of the Stochastic Markdown Bug
