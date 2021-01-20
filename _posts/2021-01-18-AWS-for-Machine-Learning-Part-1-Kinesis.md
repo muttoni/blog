@@ -135,3 +135,7 @@ Examples of when to use KDA:
 |Stream live video coverage of a sporting event to distribute to customers in near real time|Kinesis Video Stream|Process video data and feed into other AWS services (e.g. Streaming EC2 instance or S3 or CloudFront)|
 |Transform real-time streaming data and immediately feed into a custom ML application|Kinesis Data Stream|Storing is optional, our primary goal is immediate consumption, transform it and feed it into an ML model|
 |Query real-time data, create metric graphs and store output into S3|Kinesis Streams via Kinesis Data Analytics|KDA supports running SQL queries on streaming data and then store or feed the output to other services (e.g. S3)|
+
+## Hands on Lab
+
+(still being written)
