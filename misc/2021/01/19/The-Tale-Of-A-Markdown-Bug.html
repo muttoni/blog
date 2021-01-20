@@ -4,13 +4,13 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
-<title>The Tale of a Markdown Bug | Andrea Muttoni</title>
+<title>The Tale of the Stochastic Markdown Bug | Andrea Muttoni</title>
 <meta name="generator" content="Jekyll v4.1.1" />
-<meta property="og:title" content="The Tale of a Markdown Bug" />
+<meta property="og:title" content="The Tale of the Stochastic Markdown Bug" />
 <meta name="author" content="Andrea Muttoni" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="Headings or subheadings randomly not rendering in markdown? Read on. In this post I recount an insidious markdown bug that took me way too much time to fix." />
-<meta property="og:description" content="Headings or subheadings randomly not rendering in markdown? Read on. In this post I recount an insidious markdown bug that took me way too much time to fix." />
+<meta name="description" content="Headings or subheadings randomly not rendering in markdown? Read on. In this post I recount an insidious markdown bug that took me much time to track down." />
+<meta property="og:description" content="Headings or subheadings randomly not rendering in markdown? Read on. In this post I recount an insidious markdown bug that took me much time to track down." />
 <link rel="canonical" href="https://muttoni.github.io/blog/misc/2021/01/19/The-Tale-Of-A-Markdown-Bug.html" />
 <meta property="og:url" content="https://muttoni.github.io/blog/misc/2021/01/19/The-Tale-Of-A-Markdown-Bug.html" />
 <meta property="og:site_name" content="Andrea Muttoni" />
@@ -18,7 +18,7 @@
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2021-01-19T00:00:00-06:00" />
 <script type="application/ld+json">
-{"url":"https://muttoni.github.io/blog/misc/2021/01/19/The-Tale-Of-A-Markdown-Bug.html","@type":"BlogPosting","headline":"The Tale of a Markdown Bug","dateModified":"2021-01-19T00:00:00-06:00","datePublished":"2021-01-19T00:00:00-06:00","image":"https://muttoni.github.io/blog/images/md-preview.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://muttoni.github.io/blog/misc/2021/01/19/The-Tale-Of-A-Markdown-Bug.html"},"author":{"@type":"Person","name":"Andrea Muttoni"},"description":"Headings or subheadings randomly not rendering in markdown? Read on. In this post I recount an insidious markdown bug that took me way too much time to fix.","@context":"https://schema.org"}</script>
+{"url":"https://muttoni.github.io/blog/misc/2021/01/19/The-Tale-Of-A-Markdown-Bug.html","@type":"BlogPosting","headline":"The Tale of the Stochastic Markdown Bug","dateModified":"2021-01-19T00:00:00-06:00","datePublished":"2021-01-19T00:00:00-06:00","image":"https://muttoni.github.io/blog/images/md-preview.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://muttoni.github.io/blog/misc/2021/01/19/The-Tale-Of-A-Markdown-Bug.html"},"author":{"@type":"Person","name":"Andrea Muttoni"},"description":"Headings or subheadings randomly not rendering in markdown? Read on. In this post I recount an insidious markdown bug that took me much time to track down.","@context":"https://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://muttoni.github.io/blog/feed.xml" title="Andrea Muttoni" /><!-- the google_analytics_id gets auto inserted from the config file -->
 
@@ -104,13 +104,13 @@ window.onload = wrap_img;
         <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
   <header class="post-header">
-    <h1 class="post-title p-name" itemprop="name headline">The Tale of a Markdown Bug</h1><p class="page-description">Headings or subheadings randomly not rendering in markdown? Read on. In this post I recount an insidious markdown bug that took me way too much time to fix.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-01-19T00:00:00-06:00" itemprop="datePublished">
+    <h1 class="post-title p-name" itemprop="name headline">The Tale of the Stochastic Markdown Bug</h1><p class="page-description">Headings or subheadings randomly not rendering in markdown? Read on. In this post I recount an insidious markdown bug that took me much time to track down.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-01-19T00:00:00-06:00" itemprop="datePublished">
         Jan 19, 2021
       </time>
        • <span class="read-time" title="Estimated read time">
     
     
-      6 min read
+      7 min read
     
 </span></p>
 
@@ -126,9 +126,9 @@ window.onload = wrap_img;
     </header>
 
   <div class="post-content e-content" itemprop="articleBody">
-    <p>Ok this happened – I was typing a blog post using markdown in VSCode and was making liberal use of subheadings, as one does when explaining a topic in a structured way. Upon saving and previewing the post some headings simply did not render. I tried reloading multiple times, editing the spacing, ensuring there was 1 space between the hashtags and the words, anything I could think of. Here’s what the issue looked like…</p>
+    <p>I’ve recently started writing a blog as a way to “slow down” my learning and document things for my future self. Today I was typing out some quick notes for a blog post in markdown on VSCode and was making liberal use of subheadings, as one does when explaining a topic in a structured way. I like to type without distractions so I don’t preview things right away. Upon saving and previewing the post some headings simply did not render. I tried reloading multiple times, editing the spacing, ensuring there was 1 space between the hashtags and the words, anything I could think of. Here’s a condensed example of what the issue looked like:</p>
 
-<p>The markdown:</p>
+<p>The markdown (heading type is irrelevant, and horizontal lines added for demo confinement):</p>
 
 <div class="language-markdown highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">---</span>
 
@@ -153,7 +153,7 @@ window.onload = wrap_img;
 
 <h2 id="blaming-fastpages">Blaming Fastpages</h2>
 
-<p>Now for some context: my blog is currently powered by <a href="https://github.com/fastai/fastpages">fastpages</a>,  an opinionated customization layer on top of Jekyll that allows for quick publishing of Jupyter notebooks and markdown files hosted on github.io with a slightly tweaked minima interface. Chances are you’re still looking at it right now.</p>
+<p>Now for some context: the post was LONG, and full of tables, image placeholders pointing to images I had not yet created, randomly indented lists and missing line breaks after the headings. I immediately thought some weird combo had broken the parser. Furthermore, my blog is currently powered by <a href="https://github.com/fastai/fastpages">fastpages</a>, an opinionated customization layer on top of Jekyll that allows for quick publishing of Jupyter notebooks as blog posts hosted on github.io with a slightly tweaked minima interface (further tweaked by me). Chances are you’re still looking at it right now (highly recommended by the way).</p>
 
 <p>Given the recent launch of fastpages, I suspected there was a bug in the markdown rendering pipeline, mainly due to the fact that my post made heavy use of lists and tables, potentially causing some parsing conflicts. So I tried fiddling with the text itself, trying to see if I could get around the parsing bug. I tried adding text before/after the heading, removing earlier parts of the post to see if a strange character in a code block was causing butterfly effects in the parsing several paragraphs down… nothing!</p>
 
@@ -165,9 +165,9 @@ window.onload = wrap_img;
 
 <p><img src="/blog/images/md-preview.png" alt="" title="The previewed output" /></p>
 
-<p>So I installed a VSCode extension called Markdown Lint to check whether I had made a mistake somewhere along the post that had propagated into an incorrect parsing of the heading. The linter identified several issues such as extra line breaks where there shouldn’t have been, trailing spaces, missing line breaks before a list–everything…but that damn heading. After fixing everything else, the problem persisted and the heading seemed perfectly A-OK for the linter!</p>
+<p>So I installed the most popular markdown linter VSCode extension (<a href="https://github.com/DavidAnson/markdownlint">Markdown Lint</a>) to check whether I had made a mistake somewhere along the way that had propagated into an incorrect parsing of the headings. The linter identified several issues such as extra line breaks where there shouldn’t have been, trailing spaces, missing line breaks before a list–everything…but that damn heading. After fixing everything that was flagged, the problem persisted and the heading seemed perfectly A-OK for the linter!</p>
 
-<p><img src="/blog/images/md-linter.png" alt="" title="Are you sure about that Markdown Lint?" /></p>
+<p><img src="/blog/images/md-linter.png" alt="" title="Are you sure about that, Markdown Lint?" /></p>
 
 <p><strong>Ok, something’s up.</strong></p>
 
@@ -181,19 +181,19 @@ window.onload = wrap_img;
 
 <p>There was something I hadn’t tried. I had only cut, copied, pasted, adjusted, changed the title, moved the title around…but I had never actually tried to delete it and write it from scratch.</p>
 
-<p>A moment of deep calm surrounds me as I hit the backspace character repeatedly until the whole heading disappears–including the line break for good measure. I press enter again and type a new heading <em>slowly</em>. It works. Damn you Occam! But why? Well, Occam again: if there’s a problem with the heading…the problem is probably with the heading, not everywhere else. So I start dissecting the heading and evalute possibilities:</p>
+<p>A moment of deep calm surrounds me. I hit the backspace character repeatedly until the whole heading disappears–including the line break for good measure. I press enter again and type a new heading <em>slowly</em>. It works. Damn you Occam! But why? Well, Occam again: if there’s a problem with the heading…the problem is probably in the heading, not everywhere else. So I start dissecting the heading and evalute possibilities:</p>
 
 <ul>
-  <li>The original line break was a weird unix/windows mix that is causing conflicts</li>
-  <li>The original hashtags were special character equivalents</li>
-  <li>The space inbetween the hashtags and the heading text was a special character</li>
+  <li>The original line break was a weird unix/windows mix that is causing conflicts <em>(unlikely, using macOS)</em></li>
+  <li>The original hashtags were special character equivalents <em>(…are you drunk?)</em></li>
+  <li>The space inbetween the hashtags and the heading text was a special character <em>(only NOW you think of this?)</em></li>
 </ul>
 
-<p>I have never heard of “special” hashtag characters, and the I had tried to add and remove the linebreaks multiple times, so I ruled both out and focused on the third possibility: the space character. Now the internet is full of examples of how spaces can be leveraged to exploit form vulnerabilities, perform XSS injections and in general mess with software in fun and interesting ways. So I copied the space character from a heading that worked, and from the heading that didn’t work and fired up the old Javascript console. I took out my scalpel for the job, good ol’ <code class="language-plaintext highlighter-rouge">String.prototype.charCodeAt()</code>, and got to work.</p>
+<p>I have never heard of “special” hashtag characters, and I had tried to add and remove the linebreaks multiple times, and I ruled both out more or less immediately–in my heart I already knew the answer. Had reading HN daily really not taught me anything? The internet is full of examples of how whitespace can be leveraged to exploit form vulnerabilities, perform XSS injections and in general mess with software in fun and interesting ways. So I copied the space character from a heading that worked, and from the heading that didn’t work and fired up the old Javascript console. I took out my scalpel for the job, good ol’ <code class="language-plaintext highlighter-rouge">String.prototype.charCodeAt()</code>, and got to work.</p>
 
 <p><img src="/blog/images/md-charcodeat.png" alt="" /></p>
 
-<p>A-ha! Those numbers are decimal charcodes. I’ll give you a hint: 32 is the decimal charcode for a regular space. Can you guess what 160 is? If you’re a webdev keep it to yourself, don’t spoil it for the others! Charcode 160, aka <code class="language-plaintext highlighter-rouge">&amp;nbsp;</code> in HTML, is called a <strong>non-breaking space</strong>. Essentially identical to a normal space in every single way, including it’s unique ability to go undetected in Markdown Lint, except for the fact that it’s a <em>completely different character</em>. It’s usually used when you don’t want a trailing space or the space between two HTML tags to be automatically ignored. Ironic that it was ignored by both the markdown parser and the markdown linter.</p>
+<p>A-ha! Those numbers are decimal charcodes. I’ll give you a hint: 32 is the decimal charcode for a regular space. Can you guess what 160 is? If you’re a webdev keep it to yourself, don’t spoil it for the others! Charcode 160, aka <code class="language-plaintext highlighter-rouge">&amp;nbsp;</code> in HTML, is called a <strong>non-breaking space</strong>. Essentially identical to a normal space in every single way, including its unique ability to go undetected in Markdown Lint, except for the fact that it’s a <em>completely different character</em>. It’s usually used when you don’t want a trailing space or the space between two HTML tags to be automatically ignored. Ironic that it was ignored by both the markdown parser and the markdown linter.</p>
 
 <p>Spaces are quite a rabbit hole. After a little research I found out there are (at least) 19 types of spaces.</p>
 
@@ -222,25 +222,25 @@ U+3000 Ideographic space
 
 <p>## Conclusions</p>
 
-<p>Adventurers, please be wary of the insidiousness of the evil non-breaking space. It will strike when you least expect it. Oh, and I made Markdown Lint aware of the <a href="https://github.com/DavidAnson/markdownlint/issues/367">issue</a>, so hopefully it won’t happen to you.</p>
+<p>Adventurers, please be wary of the insidiousness of the evil non-breaking space. It will strike when you least expect it. Oh, and I made Markdown Lint aware of the <a href="https://github.com/DavidAnson/markdownlint/issues/367">issue</a>, so hopefully it won’t happen to you. Side note: upon trying other online markdown tools, the “whitespace award” goes to <a href="https://dillinger.io">dillinger.io</a> for correctly marking the non-breaking space as an illegal character.</p>
 
-<p>There’s only one latent question: how did that non-breaking space get there in the first place? Good question. If I find out, I’ll update this post. If you find out, please reach out on Twitter at <a href="https://twitter.com/muttonia">muttonia@</a>! Current suspects are:</p>
+<p><strong>There’s only one latent question</strong>: how did that non-breaking space get there in the first place? Good question. If I find out, I’ll update this post. If you find out, please reach out on Twitter at <a href="https://twitter.com/muttonia">muttonia@</a>! Current suspects are:</p>
 
 <ul>
   <li>having copied and pasted the file from a non-markdown format (i.e. an untitled VSCode file, into a new .md file.)</li>
-  <li>fastpages altering the contents in its (first) rendering pass if the post is not properly formatted with a header block at the beginning.</li>
+  <li>fastpages accidentally altering the contents in its (first) rendering pass if the post is not properly formatted with a header metadata block at the beginning (which it wasn’t)</li>
   <li>me being an idiot</li>
 </ul>
 
-<h2 id="edit-mystery-solved">Edit: Mystery Solved</h2>
+<h2 id="addendum-mystery-solved">Addendum: Mystery Solved</h2>
 
 <p>Turns out I <em>was</em> an idiot. With an Italian keyboard layout, the <code class="language-plaintext highlighter-rouge">#</code> hashtag character is created by pressing the <code class="language-plaintext highlighter-rouge">Alt Gr</code> modifier key followed by the <code class="language-plaintext highlighter-rouge">à</code> key. Here’s the keyboard layout for those not familiar:</p>
 
 <p><img src="/blog/images/eurkey.png" alt="" title="A typical it-IT keyboard layout, original from Wikimedia" /></p>
 
-<p>It <em>also</em> turns out, that <code class="language-plaintext highlighter-rouge">Alt Gr</code> followed by the <code class="language-plaintext highlighter-rouge">space</code> key generates a <strong>non-breaking space</strong> (note: if this is common knowledge, I will bow my head in silence and sacrifice my useless <code class="language-plaintext highlighter-rouge">Caps Lock</code> key to the typing gods, preventing it’s reincarnation as a remapped CMD or CTRL key).</p>
+<p>It <em>also</em> turns out, that <code class="language-plaintext highlighter-rouge">Alt Gr</code> followed by the <code class="language-plaintext highlighter-rouge">space</code> key generates a <strong>non-breaking space</strong> (note: if this is common knowledge, I will bow my head in silence and sacrifice my <code class="language-plaintext highlighter-rouge">Caps Lock</code> key to the typing gods, preventing it’s reincarnation as a remapped CMD or CTRL key).</p>
 
-<p>Well, can you guess what happened? When typing with haste, after inserting hashtags for the heading, my thumbs occasionally pressed <code class="language-plaintext highlighter-rouge">space</code> before the <code class="language-plaintext highlighter-rouge">Alt Gr</code> key had time to fully unpress, causing a non-breaking space to sneak in the heading. Since the spaces look identical, there was no visual queue on VSCode or Markdown Lint that a problematic character had sneaked in. The stochastic nature of the issue (i.e. depending entirely on my typing speed and finger timing) meant that it probably re-occured at random in my early troubleshooting further confusing my triaging. I told you those damn spaces are insidious.</p>
+<p>So what happened? Well, when typing with haste, after inserting hashtags for the heading, my thumbs occasionally pressed <code class="language-plaintext highlighter-rouge">space</code> before the <code class="language-plaintext highlighter-rouge">Alt Gr</code> key had time to fully unpress, causing a non-breaking space to sneak in the heading. Since the spaces look identical, there was no visual queue on VSCode or Markdown Lint that a problematic character had sneaked in. The stochastic nature of the issue (i.e. depending entirely on my typing speed and finger timing) meant that it also re-occured at random in my early troubleshooting further confusing my bug triaging. I told you those damn spaces are insidious.</p>
 
 <p>So I guess the ultimate Occam’s Razor axiom is: if something goes wrong, it’s probably your own damn fault. So, whenever you are facing a furiously difficult bug, remember Occam’s Razor:</p>
 
