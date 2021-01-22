@@ -65,7 +65,7 @@ Once imported, it is _theoretically_ the same as the original model. This is not
 
 ### Exporting using LightGBM's `save_model`
 
-LightGBM also offers its own export functionality which can be called directly from the booster itself. The method is called `.save_model`. The method outputs a clear, human-readable .txt file.
+LightGBM also offers its own export functionality which can be called directly from the booster itself. The method is called `.save_model`. The method outputs a clear, human-readable text file.
 
 ```python
 # Saving the model using LightGBM's save_model method
