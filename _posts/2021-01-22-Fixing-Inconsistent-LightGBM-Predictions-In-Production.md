@@ -9,7 +9,9 @@ title: How to Ensure Consistent LightGBM Predictions in Production
 image: images/pkl-meme.jpg
 ---
 
-Recently I've been working on productionizing a regression model to accurately estimate used car prices. This was following a request from a friend who owns a dealership and wants to know how much customer's cars are worth in 3-4 years when he sells them. The model is also useful for him to  The model is a LightGBM booster with ~6-10k estimators (depending on the number of features used). It's been quite the adventure, and will write a blog post on the end to end process sometime in the future. In short, the process consists of:
+Recently I've been working on productionizing a regression model to accurately estimate used car values. This was following a request from a friend who owns a car dealership and wants to know two things: 1) how much customer's cars will be worth in 3-4 years when they trade them in for a new car and 2) what's the trade-in value of a new customer's used car.
+
+The model is a LightGBM booster with ~6-10k estimators (depending on the number of features used). It's been quite the adventure, and will write a blog post on the end-to-end process sometime in the future. In short, the process consists of:
 
 1. **Scraping data** with Scrapy on multiple car sites via an Amazon EC2 instance and merging the data with other proprietary data.
 1. **Aggregating and cleaning** the data and preparing a single, uniform DataFrame for model training. This is by far the most delicate and important step!
