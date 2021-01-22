@@ -9,14 +9,14 @@ title: How to Ensure Consistent LightGBM Predictions in Production
 image: images/pkl-meme.jpg
 ---
 
-Recently I've been working on productionizing a regression model to accurately estimate used car values. This was following a request from a friend who owns a car dealership and wants to know two things: 1) how much customer's cars will be worth in 3-4 years when they trade them in for a new car and 2) what's the trade-in value of a new customer's used car.
+Recently I've been working on productionizing a regression model to accurately estimate used car values. This was following a request from a friend who owns a car dealership and wants to know two things: 1) how much a customer's car will be worth in 3-4 years when they trade it in for a new model, and 2) what's the trade-in value now of a new customer's used car. I was looking for a new project so I decided to help him out.
 
-The model is a LightGBM booster with ~6-10k estimators (depending on the number of features used). It's been quite the adventure, and will write a blog post on the end-to-end process sometime in the future. In short, the process consists of:
+The model uses a LightGBM booster with ~6-10k estimators (depending on the number of features used). It's been quite the adventure, and I will write a blog post on the end-to-end process sometime in the future. In short, the process consists of:
 
 1. **Scraping data** with Scrapy on multiple car sites via an Amazon EC2 instance and merging the data with other proprietary data.
-1. **Aggregating and cleaning** the data and preparing a single, uniform DataFrame for model training. This is by far the most delicate and important step!
+1. **Aggregating and cleaning** the data and outputting a single, uniform dataset for model training. This is by far the most delicate and important step!
 1. **Training the model**, benchmarking it against other methods including RF, XGBoost and Deep Learning using embeddings.
-1. **Deploying the model to production**, making it accessible via an API endpoint (e.g. Flask).
+1. **Deploying the model to production**, making it accessible via an API endpoint.
 1. **Creating a web app** that acts as a pretty customer frontend that queries the API for predictions.
 
 This is all well and good, but having never worked with LightGBM before, some problems arose around Step 4, when I first started exporting the model and trying to replicate predictions in the production environment.
