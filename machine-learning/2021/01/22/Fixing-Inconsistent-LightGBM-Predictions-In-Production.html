@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="twitter:card" content="summary_large_image" /><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>How to Ensure Consistent LightGBM Predictions in Production | Andrea Muttoni</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="How to Ensure Consistent LightGBM Predictions in Production" />
+<meta name="author" content="Andrea Muttoni" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="How hard can it be - just use pickle! Here’s what I learned deploying an LightGBM model to production in order to ensure consistent predictions." />
+<meta property="og:description" content="How hard can it be - just use pickle! Here’s what I learned deploying an LightGBM model to production in order to ensure consistent predictions." />
+<link rel="canonical" href="https://muttoni.github.io/blog/machine-learning/2021/01/22/Fixing-Inconsistent-LightGBM-Predictions-In-Production.html" />
+<meta property="og:url" content="https://muttoni.github.io/blog/machine-learning/2021/01/22/Fixing-Inconsistent-LightGBM-Predictions-In-Production.html" />
+<meta property="og:site_name" content="Andrea Muttoni" />
+<meta property="og:image" content="https://muttoni.github.io/blog/images/pkl-meme.jpg" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-01-22T00:00:00-06:00" />
+<script type="application/ld+json">
+{"url":"https://muttoni.github.io/blog/machine-learning/2021/01/22/Fixing-Inconsistent-LightGBM-Predictions-In-Production.html","@type":"BlogPosting","headline":"How to Ensure Consistent LightGBM Predictions in Production","dateModified":"2021-01-22T00:00:00-06:00","datePublished":"2021-01-22T00:00:00-06:00","image":"https://muttoni.github.io/blog/images/pkl-meme.jpg","mainEntityOfPage":{"@type":"WebPage","@id":"https://muttoni.github.io/blog/machine-learning/2021/01/22/Fixing-Inconsistent-LightGBM-Predictions-In-Production.html"},"author":{"@type":"Person","name":"Andrea Muttoni"},"description":"How hard can it be - just use pickle! Here’s what I learned deploying an LightGBM model to production in order to ensure consistent predictions.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://muttoni.github.io/blog/feed.xml" title="Andrea Muttoni" /><!-- the google_analytics_id gets auto inserted from the config file -->
+
+
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BLM1GZKCEL"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-BLM1GZKCEL');
+</script>
+
+
+<link rel="shortcut icon" type="image/x-icon" href="/blog/images/favicon.ico"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/15.2.0/primer.css" integrity="sha512-xTz2ys4coGAOz8vuV1NcQBkgVmKhsSEtjbqyMJbBHRplFuvKIUo6xhLHpAyPt9mfR6twHJgn9OgVLuqOvjeBhg==" crossorigin="anonymous" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/contrib/auto-render.min.js" integrity="sha512-Do7uJAaHZm5OLrIv/yN4w0iG1dbu01kzdMNnFfu/mAqgUk6Nniv2JYHcwH+cNwjqgLcqcuBBk+JRvprLVI8azg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha512-0doc9hKxR3PYwso42RD1p5ySZpzzuDiOwMrdCEh2WdJZCjcmFKc/wEnL+z8fBQrnHoiNWbo+3fiGkOYXBdQp4A==" crossorigin="anonymous"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement( document.body, {
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "[%", right: "%]", display: true},
+            {left: "$", right: "$", display: false}
+        ]}
+        );
+    });
+    </script>
+
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title") && (el.className != "emoji")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    });
+</script>
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/blog/">Andrea Muttoni</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/blog/about/">About Me</a><a class="page-link" href="/blog/search/">Search</a><a class="page-link" href="/blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">How to Ensure Consistent LightGBM Predictions in Production</h1><p class="page-description">How hard can it be - just use pickle! Here's what I learned deploying an LightGBM model to production in order to ensure consistent predictions.</p><p class="post-meta post-meta-title"><time class="dt-published" datetime="2021-01-22T00:00:00-06:00" itemprop="datePublished">
+        Jan 22, 2021
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      6 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/blog/categories/#machine-learning">machine-learning</a>
+        
+      
+      </p>
+    
+
+    </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h2"><a href="#exporting-a-lightgbm-model">Exporting a LightGBM Model</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#serializing-with-pickle-or-joblib">Serializing with pickle or joblib</a></li>
+<li class="toc-entry toc-h3"><a href="#exporting-using-lightgbms-save_model">Exporting using LightGBM’s save_model</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#inconsistent-predictions-in-production">Inconsistent Predictions in Production</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#common-reasons-for-inconsistent-lightgbm-predictions-in-production">Common Reasons for Inconsistent LightGBM Predictions in Production</a>
+<ul>
+<li class="toc-entry toc-h4"><a href="#environment-consistency">Environment Consistency</a></li>
+<li class="toc-entry toc-h4"><a href="#feature-column-ordering">Feature (Column) Ordering</a></li>
+<li class="toc-entry toc-h4"><a href="#how-to-ensure-consistent-column-ordering">How to Ensure Consistent Column Ordering</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#conclusions">Conclusions</a></li>
+</ul><p>Recently I’ve been working on productionizing a regression model to accurately estimate used car prices. This was following a request from a friend who owns a dealership and wants to know how much customer’s cars are worth in 3-4 years when he sells them. The model is also useful for him to  The model is a LightGBM booster with ~6-10k estimators (depending on the number of features used). It’s been quite the adventure, and will write a blog post on the end to end process sometime in the future. In short, the process consists of:</p>
+
+<ol>
+  <li>
+<strong>Scraping data</strong> with Scrapy on multiple car sites via an Amazon EC2 instance and merging the data with other proprietary data.</li>
+  <li>
+<strong>Aggregating and cleaning</strong> the data and preparing a single, uniform DataFrame for model training. This is by far the most delicate and important step!</li>
+  <li>
+<strong>Training the model</strong>, benchmarking it against other methods including RF, XGBoost and Deep Learning using embeddings.</li>
+  <li>
+<strong>Deploying the model to production</strong>, making it accessible via an API endpoint (e.g. Flask).</li>
+  <li>
+<strong>Creating a web app</strong> that acts as a pretty customer frontend that queries the API for predictions.</li>
+</ol>
+
+<p>This is all well and good, but having never worked with LightGBM before, some problems arose around Step 4, when I first started exporting the model and trying to replicate predictions in the production environment.</p>
+
+<p><img src="/blog/images/pkl-meme.jpg" alt=""></p>
+
+<h2 id="exporting-a-lightgbm-model">
+<a class="anchor" href="#exporting-a-lightgbm-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Exporting a LightGBM Model</h2>
+
+<p>Now right off the bat, let’s just say that LightGBM is awesome– it’s an efficient gradient boosting framework that uses tree-based learning. It’s very efficient, uses lower memory than other tree/boosting methods and supports dealing with categorical label-encoded variables. However, I had a couple frustrations when porting my model from my prototyping environment to production.</p>
+
+<p>Let’s first recap the various ways in which you can export a model. We’ll assume we have a standard booster that we need to save. Specific parameters are beyond the scope of this post.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">lightgbm</span> <span class="k">as</span> <span class="n">lgb</span>
+<span class="c1"># Our training model...
+</span><span class="n">bst</span> <span class="o">=</span> <span class="n">lgb</span><span class="p">.</span><span class="n">LGBMRegressor</span><span class="p">().</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="serializing-with-pickle-or-joblib">
+<a class="anchor" href="#serializing-with-pickle-or-joblib" aria-hidden="true"><span class="octicon octicon-link"></span></a>Serializing with <code class="language-plaintext highlighter-rouge">pickle</code> or <code class="language-plaintext highlighter-rouge">joblib</code>
+</h3>
+
+<p>Two common ways to export any Sci-Kit model is <a href="https://docs.python.org/3/library/pickle.html"><code class="language-plaintext highlighter-rouge">pickle</code></a> or <a href="https://joblib.readthedocs.io/en/latest/index.html#module-joblib"><code class="language-plaintext highlighter-rouge">joblib</code></a>. They are quite similar, as <code class="language-plaintext highlighter-rouge">joblib</code> uses pickle as a protocol under the hood. Pickling is essentially a process of serializing a python object structure by converting the underlying object hierarchy into a byte stream. What’s not so great about pickling is that the resulting bytestream is hard to inspect unless unpickled (or generated using the oldest Protocol, v0). It also represents a potential security risk as a pickle could consist in arbitrary code, and if opened without precautions could lead to unwanted code being arbitrarily executed. <code class="language-plaintext highlighter-rouge">joblib</code> extends <code class="language-plaintext highlighter-rouge">pickle</code> by supporting compression helping serialize objects a bit more efficiently.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Using pickle 
+</span><span class="kn">import</span> <span class="nn">pickle</span>
+<span class="n">pickle</span><span class="p">.</span><span class="n">dump</span><span class="p">(</span><span class="n">bst</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="s">'model.pkl'</span><span class="p">,</span> <span class="s">'wb'</span><span class="p">))</span>
+
+<span class="c1"># Using joblib
+</span><span class="kn">import</span> <span class="nn">joblib</span>
+<span class="n">joblib</span><span class="p">.</span><span class="n">dump</span><span class="p">(</span><span class="n">bst</span><span class="p">,</span> <span class="s">'model.pkl'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>To de-serialize (import) your model later, you would use:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Using pickle 
+</span><span class="kn">import</span> <span class="nn">pickle</span>
+<span class="n">bst</span> <span class="o">=</span> <span class="n">pickle</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s">'model.pkl'</span><span class="p">,</span> <span class="s">'rb'</span><span class="p">))</span>
+
+<span class="c1"># Using joblib
+</span><span class="kn">import</span> <span class="nn">joblib</span>
+<span class="n">bst</span> <span class="o">=</span> <span class="n">joblib</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="s">'model.pkl'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Once imported, it is <em>theoretically</em> the same as the original model. This is not always the case (read on!).</p>
+
+<h3 id="exporting-using-lightgbms-save_model">
+<a class="anchor" href="#exporting-using-lightgbms-save_model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Exporting using LightGBM’s <code class="language-plaintext highlighter-rouge">save_model</code>
+</h3>
+
+<p>LightGBM also offers its own export functionality which can be called directly from the booster itself. The method is called <code class="language-plaintext highlighter-rouge">.save_model</code>. The method outputs a clear, human-readable .txt file.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Saving the model using LightGBM's save_model method
+</span><span class="n">bst</span><span class="p">.</span><span class="n">booster_</span><span class="p">.</span><span class="n">save_model</span><span class="p">(</span><span class="s">'model.txt'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>To de-serialize (import) your model later, you would use:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Importing the model using LightGBM's save_model method
+</span><span class="n">bst</span> <span class="o">=</span> <span class="n">lgb</span><span class="p">.</span><span class="n">Booster</span><span class="p">(</span><span class="n">model_file</span><span class="o">=</span><span class="s">'model.txt'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Again, once imported, it is <em>theoretically</em> the same as the original model. However there’s some important considerations that I found out the hard way.</p>
+
+<h2 id="inconsistent-predictions-in-production">
+<a class="anchor" href="#inconsistent-predictions-in-production" aria-hidden="true"><span class="octicon octicon-link"></span></a>Inconsistent Predictions in Production</h2>
+
+<p>So you’re having a blast prototyping away on your Jupyter Notebook, getting unbelievable predictive accuracy, eye-wateringly low validation loss. Your team, manager and CEO are popping the champagne and patting you on the back saying “you did it, you rockstar!”.</p>
+
+<p>Feeling invincible, you export the model and deploy it to production, start feeding it live data and your initial glee quickly turns to gut-wrenching dread as the predictions are all over the place. What went wrong?!</p>
+
+<p>The first immediate hypothesis is that there’s something wrong with the file. You try exporting the model again, but the predictions are different, and just as wild. You start to question your sanity. You start sweating, a cold panic sweat. Your brain is taunting you: “<em>All of that champage…for what?</em>”</p>
+
+<p>Then you remember you were reading this blog post, and continue on reading.</p>
+
+<h3 id="common-reasons-for-inconsistent-lightgbm-predictions-in-production">
+<a class="anchor" href="#common-reasons-for-inconsistent-lightgbm-predictions-in-production" aria-hidden="true"><span class="octicon octicon-link"></span></a>Common Reasons for Inconsistent LightGBM Predictions in Production</h3>
+
+<h4 id="environment-consistency">
+<a class="anchor" href="#environment-consistency" aria-hidden="true"><span class="octicon octicon-link"></span></a>Environment Consistency</h4>
+
+<p>Goes without saying, that first and foremost you should ensure <strong>environment consistency</strong>. Make sure that your Python environment is identical to the one that you used in your model creation step. This means Python version, dependencies’ versions, pip requirements, etc.</p>
+
+<p>If your production environment needs to maintain a different dependency set for some reason, an alternative would be to <strong>re-train your model in your production environment</strong> so you’re sure the same exact packages generating and saving your model are the same ones opening your model and making predictions.</p>
+
+<p>Another good way to ensure consistency is to use <code class="language-plaintext highlighter-rouge">virtualenv</code>, generate a <code class="language-plaintext highlighter-rouge">pip</code> requirements list using <code class="language-plaintext highlighter-rouge">pip freeze &gt; requirements.txt</code>. In production, you would copy over the requirements file and install your dependencies by using <code class="language-plaintext highlighter-rouge">pip install -r requirements.txt</code>. Done!</p>
+
+<h4 id="feature-column-ordering">
+<a class="anchor" href="#feature-column-ordering" aria-hidden="true"><span class="octicon octicon-link"></span></a>Feature (Column) Ordering</h4>
+
+<p>The second reason is <strong>feature ordering</strong>. In my experience, after having ruled out the potential issues above, the real reason for wildly wrong results was column ordering! Simple as that. It was difficult to debug when using pickled files as the byte stream is not human readable. However, if you save your model using the text-based <code class="language-plaintext highlighter-rouge">Booster.save_model</code> format, you can inspect the <code class="language-plaintext highlighter-rouge">model.txt</code>.</p>
+
+<p>Here’s an excerpt:</p>
+
+<pre><code class="language-txt">tree
+version=v3
+num_class=1
+num_tree_per_iteration=1
+label_index=0
+max_feature_idx=12
+objective=regression
+feature_names=year color_cat km material_interiors_cat cv model_cat years_old transmission_cat fuel_cat seats cc doors brand_cat
+feature_infos=[2006:2021] -1:3:8:11:1:5:14:13:4:15:2:10:6:7:12:0 [500:2920000] -1:0:2:6:3:1:4 [40:796] -1:71:410:281:200:138:318:302:187:199:57:408 ...
+tree_sizes=3607 3727 3577 ...
+
+... the file continues for 200,000 more lines
+</code></pre>
+
+<p>In the 8th line you see there’s a <code class="language-plaintext highlighter-rouge">feature_names</code> attribute where the columns (aka features) are listed. <strong>This ordering is very important! Make sure that any DataFrame or NumPy Array used for predictions follows this same ordering.</strong></p>
+
+<h4 id="how-to-ensure-consistent-column-ordering">
+<a class="anchor" href="#how-to-ensure-consistent-column-ordering" aria-hidden="true"><span class="octicon octicon-link"></span></a>How to Ensure Consistent Column Ordering</h4>
+
+<p>A manual way to ensure consistent column ordering this is to extract the feature names from the <code class="language-plaintext highlighter-rouge">model.txt</code> file at the line called <code class="language-plaintext highlighter-rouge">feature_names</code> and splitting them based on the space character, for example: <code class="language-plaintext highlighter-rouge">cols = 'feature1 feature2 feature3'.split(' ')</code>. This is what you would do at 3AM when you are debugging with tired mind (in my defense, it was quite late). Don’t do this.</p>
+
+<p>The better way is to read the feature names directly using LightGBM’s built-in <code class="language-plaintext highlighter-rouge">Booster.feature_name</code> method.  You can then <strong>reindex</strong> your production DataFrame / or array based on the order of those columns. In Pandas you would do this in the following way:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># In our production environment...
+</span><span class="kn">import</span> <span class="nn">lightgbm</span> <span class="k">as</span> <span class="n">lgb</span>
+
+<span class="c1"># Load the booster
+</span><span class="n">bst</span> <span class="o">=</span> <span class="n">lgb</span><span class="p">.</span><span class="n">Booster</span><span class="p">(</span><span class="n">model_file</span><span class="o">=</span><span class="s">'model.txt'</span><span class="p">)</span>
+
+<span class="c1"># Get the model's features in the correct order
+</span><span class="n">cols</span> <span class="o">=</span> <span class="n">bst</span><span class="p">.</span><span class="n">feature_name</span><span class="p">()</span>     <span class="c1"># -&gt; ['feat1', 'feat2', 'feat3', ...]
+</span>
+<span class="c1"># Use col to reindex the prediction DataFrame
+</span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">cols</span><span class="p">)</span> <span class="c1"># -&gt; df now has the same col ordering as the model
+</span>
+<span class="c1"># Get predictions that are consistent! 
+</span><span class="n">predictions</span> <span class="o">=</span> <span class="n">bst</span><span class="p">.</span><span class="n">predict</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h2 id="conclusions">
+<a class="anchor" href="#conclusions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conclusions</h2>
+
+<p>I’ll be sure to update this post as I uncover other quirks with productionizing this LightGBM model. So far I’m appreciating the compact size (compared to a Random Forest for example) and quick prediction speed!</p>
+
+<p>That’s all for now. Good luck with your model deployment and hope you find this useful!</p>
+
+  </div><a class="u-url" href="/blog/machine-learning/2021/01/22/Fixing-Inconsistent-LightGBM-Predictions-In-Production.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+    <data class="u-url" href="/blog/"></data>
+    
+    <div class="wrapper">
+        <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://github.com/muttoni" title="muttoni"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#github"></use></svg></a></li><li><a rel="me" href="https://www.linkedin.com/in/muttoni" title="muttoni"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#linkedin"></use></svg></a></li><li><a rel="me" href="https://twitter.com/muttonia" title="muttonia"><svg class="svg-icon grey"><use xlink:href="/blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+        <div class="footer-col-wrapper">
+            <div class="footer-col">
+                <p class="feed-subscribe"  style="text-align:center;">
+                    <a href="/blog/feed.xml">
+                        <svg class="svg-icon orange">
+                            <use xlink:href="/blog/assets/minima-social-icons.svg#rss"></use>
+                        </svg><span>Subscribe</span>
+                    </a>
+                </p>
+            </div>
+        </div>
+        
+    </div>
+    
+</footer></body>
+
+</html>

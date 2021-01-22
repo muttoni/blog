@@ -482,6 +482,10 @@ p code { font-size: 19px; }
 
 .Box .image-preview { border-radius: 4px; }
 
+.post-content h4 { font-size: 1.4rem; }
+
+.post-content h1 > code, .post-content h2 > code, .post-content h3 > code, .post-content h4 > code, .post-content h5 > code, .post-content h6 > code { font-size: 90% !important; }
+
 .Box .post-link { font-size: 22px; }
 
 .flash { font-size: 16px; }
