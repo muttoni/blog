@@ -126,7 +126,7 @@ In the 8th line you see there's a `feature_names` attribute where the columns (a
 
 #### How to Ensure Consistent Column Ordering
 
-A manual way to ensure consistent column ordering this is to extract the feature names from the `model.txt` file at the line called `feature_names` and splitting them based on the space character, for example: `cols = 'feature1 feature2 feature3'.split(' ')`. This is what you would do at 3AM when you are debugging with tired mind (in my defense, it was quite late). Don't do this.
+A manual way to ensure consistent column ordering this is to extract the feature names from the `model.txt` file at the line called `feature_names` and splitting them based on the space character, for example: `cols = 'feature1 feature2 feature3'.split(' ')`. This is what you would do at 3AM when you are debugging with a tired mind (in my defense, it was quite late). Don't do this.
 
 The better way is to read the feature names directly using LightGBM's built-in `Booster.feature_name` method.  You can then **reindex** your production DataFrame / or array based on the order of those columns. In Pandas you would do this in the following way:
 
