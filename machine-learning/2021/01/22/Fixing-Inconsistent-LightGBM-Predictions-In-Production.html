@@ -27,11 +27,11 @@
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-BLM1GZKCEL"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
 
-  gtag('config', 'G-BLM1GZKCEL');
+    gtag('config', 'G-BLM1GZKCEL');
 </script>
 
 
@@ -273,7 +273,7 @@ tree_sizes=3607 3727 3577 ...
 <h4 id="how-to-ensure-consistent-column-ordering">
 <a class="anchor" href="#how-to-ensure-consistent-column-ordering" aria-hidden="true"><span class="octicon octicon-link"></span></a>How to Ensure Consistent Column Ordering</h4>
 
-<p>A manual way to ensure consistent column ordering this is to extract the feature names from the <code class="language-plaintext highlighter-rouge">model.txt</code> file at the line called <code class="language-plaintext highlighter-rouge">feature_names</code> and splitting them based on the space character, for example: <code class="language-plaintext highlighter-rouge">cols = 'feature1 feature2 feature3'.split(' ')</code>. This is what you would do at 3AM when you are debugging with tired mind (in my defense, it was quite late). Don’t do this.</p>
+<p>A manual way to ensure consistent column ordering this is to extract the feature names from the <code class="language-plaintext highlighter-rouge">model.txt</code> file at the line called <code class="language-plaintext highlighter-rouge">feature_names</code> and splitting them based on the space character, for example: <code class="language-plaintext highlighter-rouge">cols = 'feature1 feature2 feature3'.split(' ')</code>. This is what you would do at 3AM when you are debugging with a tired mind (in my defense, it was quite late). Don’t do this.</p>
 
 <p>The better way is to read the feature names directly using LightGBM’s built-in <code class="language-plaintext highlighter-rouge">Booster.feature_name</code> method.  You can then <strong>reindex</strong> your production DataFrame / or array based on the order of those columns. In Pandas you would do this in the following way:</p>
 
