@@ -130,11 +130,11 @@ window.onload = wrap_img;
 
 <h2 id="enter-cloudflare">Enter Cloudflare</h2>
 
-<p>As a primary AWS user, I decided to try something different and use Cloudflare, having heard great things. The onboarding process was very easy, mainly centered around changing Name Servers. Once that was setup (and the obligatory 48 hour “DNS-related-lag-that-makes-you-doubt-your-config” lag passed), I was up and running with Cloudflare. I setup a simple page rule to cache everything and I was on my merry way.</p>
+<p>As a primarily AWS user, I decided to try something different and use Cloudflare, having heard great things. The onboarding process was very easy, mainly centered around changing Name Servers. Once that was setup (and the obligatory 48 hour “DNS-related-lag-that-makes-you-doubt-your-config” lag passed), I was up and running with Cloudflare. I setup a simple page rule to cache everything and I was on my merry way.</p>
 
 <h3 id="cloudflare-dashboard-analytics">Cloudflare Dashboard Analytics</h3>
 
-<p>Now once great thing about Cloudflare, is that it gives you very simple analytics right from the dashboard (requests, views, cached data served, uncached data served, etc). This was great for the first couple months as I used it as a simple way to monitor traffic. Here’s what it looks like:</p>
+<p>Now one great thing about Cloudflare, is that it gives you very simple analytics right from the dashboard (requests, views, cached data served, uncached data served, etc). This was great for the first couple months as I used it as a simple way to monitor traffic. Here’s what it looks like:</p>
 
 <p><img src="/blog/images/analytics.png" alt="" /></p>
 
@@ -151,7 +151,7 @@ window.onload = wrap_img;
 
 <p>At first, I thought I needed some <a href="https://www.cloudflare.com/en-gb/analytics/">paid subscription</a> or enterprise support of some sort. But I knew Cloudflare was a dev-friendly company so I kept digging. Eventually I found out they have a <a href="https://developers.cloudflare.com/analytics/graphql-api">GraphQL endpoint</a> dedicated to querying Analytics data.</p>
 
-<p>So I whipped out <a href="https://www.electronjs.org/apps/graphiql">GraphiQL</a> and following their brilliant <a href="https://developers.cloudflare.com/analytics/graphql-api/getting-started">guide</a></p>
+<p>So I whipped out <a href="https://www.electronjs.org/apps/graphiql">GraphiQL</a> and followed their brilliant <a href="https://developers.cloudflare.com/analytics/graphql-api/getting-started">guide</a></p>
 
 <h3 id="authentication">Authentication</h3>
 
@@ -161,9 +161,9 @@ window.onload = wrap_img;
 
 <h3 id="querying-for-views-and-requests">Querying for Views and Requests</h3>
 
-<p>Once I correctly authenticated, I pointed GraphiQL to <code class="language-plaintext highlighter-rouge">https://api.cloudflare.com/client/v4/graphql</code> and tried a couple of their example queries but none of them had the fields I was interested in: requests and views. So after a little look at their schema I wrote the following two queries. The first to give me a daily breakdown of views and requests, and the second to show a quick aggregate.</p>
+<p>Once the headers were setup, I pointed GraphiQL to <code class="language-plaintext highlighter-rouge">https://api.cloudflare.com/client/v4/graphql</code> and tried a couple of their example queries to test authentication. Success! However none of their examples had the fields I was interested in: requests and views. So after a little look at their schema I wrote the following two queries below using the <code class="language-plaintext highlighter-rouge">httpRequests1dGroups</code> data set and querying for <code class="language-plaintext highlighter-rouge">requests</code> and <code class="language-plaintext highlighter-rouge">pageViews</code>. The first query gives me a daily breakdown of views and requests, and the second gives a total aggregate.</p>
 
-<p>GraphiQL is really easy to setup and use. Here’s what it looks like once you setup your headers, and write your first query (yes, that’s my real data!). If you’re wondering what happened on the 16th of Feb, well the Reddit Hug-of-Life™ happened.</p>
+<p>GraphiQL is really easy to setup and use. Here’s what it looks like once you setup your headers, and write your first query (yes, that’s my real data!). If you’re wondering what happened on the 16th of Feb, well the Reddit <em>Hug-of-Life</em>™ happened.</p>
 
 <p><img src="/blog/images/daily-views.png" alt="" /></p>
 
