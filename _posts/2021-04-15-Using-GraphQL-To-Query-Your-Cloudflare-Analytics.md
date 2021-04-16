@@ -13,11 +13,11 @@ I've recently started a side project which has gotten more popular than I expect
 
 ## Enter Cloudflare
 
-As a primary AWS user, I decided to try something different and use Cloudflare, having heard great things. The onboarding process was very easy, mainly centered around changing Name Servers. Once that was setup (and the obligatory 48 hour "DNS-related-lag-that-makes-you-doubt-your-config" lag passed), I was up and running with Cloudflare. I setup a simple page rule to cache everything and I was on my merry way. 
+As a primarily AWS user, I decided to try something different and use Cloudflare, having heard great things. The onboarding process was very easy, mainly centered around changing Name Servers. Once that was setup (and the obligatory 48 hour "DNS-related-lag-that-makes-you-doubt-your-config" lag passed), I was up and running with Cloudflare. I setup a simple page rule to cache everything and I was on my merry way. 
 
 ### Cloudflare Dashboard Analytics
 
-Now once great thing about Cloudflare, is that it gives you very simple analytics right from the dashboard (requests, views, cached data served, uncached data served, etc). This was great for the first couple months as I used it as a simple way to monitor traffic. Here's what it looks like:
+Now one great thing about Cloudflare, is that it gives you very simple analytics right from the dashboard (requests, views, cached data served, uncached data served, etc). This was great for the first couple months as I used it as a simple way to monitor traffic. Here's what it looks like:
 
 ![]({{ site.baseurl }}/images/analytics.png)
 
@@ -33,7 +33,7 @@ So I was only interested in two things:
 
 At first, I thought I needed some [paid subscription](https://www.cloudflare.com/en-gb/analytics/) or enterprise support of some sort. But I knew Cloudflare was a dev-friendly company so I kept digging. Eventually I found out they have a [GraphQL endpoint](https://developers.cloudflare.com/analytics/graphql-api) dedicated to querying Analytics data. 
 
-So I whipped out [GraphiQL](https://www.electronjs.org/apps/graphiql) and following their brilliant [guide](https://developers.cloudflare.com/analytics/graphql-api/getting-started)
+So I whipped out [GraphiQL](https://www.electronjs.org/apps/graphiql) and followed their brilliant [guide](https://developers.cloudflare.com/analytics/graphql-api/getting-started)
 
 
 ### Authentication
@@ -45,9 +45,9 @@ Authenticating is quite easy, all I needed to do was add two HTTP headers in the
 
 ### Querying for Views and Requests
 
-Once I correctly authenticated, I pointed GraphiQL to `https://api.cloudflare.com/client/v4/graphql` and tried a couple of their example queries but none of them had the fields I was interested in: requests and views. So after a little look at their schema I wrote the following two queries. The first to give me a daily breakdown of views and requests, and the second to show a quick aggregate.
+Once the headers were setup, I pointed GraphiQL to `https://api.cloudflare.com/client/v4/graphql` and tried a couple of their example queries to test authentication. Success! However none of their examples had the fields I was interested in: requests and views. So after a little look at their schema I wrote the following two queries below using the `httpRequests1dGroups` data set and querying for `requests` and `pageViews`. The first query gives me a daily breakdown of views and requests, and the second gives a total aggregate.
 
-GraphiQL is really easy to setup and use. Here's what it looks like once you setup your headers, and write your first query (yes, that's my real data!). If you're wondering what happened on the 16th of Feb, well the Reddit Hug-of-Life™ happened.
+GraphiQL is really easy to setup and use. Here's what it looks like once you setup your headers, and write your first query (yes, that's my real data!). If you're wondering what happened on the 16th of Feb, well the Reddit *Hug-of-Life*™ happened.
 
 ![]({{ site.baseurl }}/images/daily-views.png)
 
